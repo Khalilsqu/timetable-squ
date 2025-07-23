@@ -16,10 +16,14 @@ const COLUMN_ORDER: { key: keyof SheetRow; title: string }[] = [
   { key: "building", title: "Building" },
   { key: "college", title: "College" },
   { key: "department", title: "Department" },
-  { key: "exam_day", title: "Exam day" },
-  { key: "exam_date", title: "Exam date" },
-  { key: "exam_start_time", title: "Exam start" },
-  { key: "exam_end_time", title: "Exam end" },
+  // optional new columns
+  // { key: "credit_hours", title: "Credit Hours" },
+  // { key: "students_in_section", title: "Enrolled" },
+  // { key: "max_students", title: "Capacity" },
+  // { key: "room_capacity", title: "Room Cap." },
+  // { key: "exam_building", title: "Exam Bldg" },
+  // { key: "exam_hall", title: "Exam Hall" },
+  // { key: "teaching_hours", title: "Teaching Hrs" },
 ];
 
 /* ———————————————————————————————————————————
@@ -37,4 +41,3 @@ export function buildScheduleColumns(): MRT_ColumnDef<SheetRow>[] {
         : 140,
   }));
 }
-

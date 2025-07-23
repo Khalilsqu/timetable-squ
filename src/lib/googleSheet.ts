@@ -40,6 +40,60 @@ interface GVizResp {
   table: GVizTable;
 }
 
+const KEY_MAP: Record<string, string> = {
+  // new columns
+  Collage: "college", // note the misspelling in the sheet
+  "Course Code": "course_code",
+  "Credit Hours": "credit_hours",
+  "Section Num": "section",
+  "Course Name": "course_name",
+  "Department Name": "department",
+  "Instructor Code": "instructor_code",
+  "Instructor Name": "instructor",
+  "Number of student In Section": "students_in_section",
+  "Max Number Of Students": "max_students",
+  "Hall Name": "hall",
+  "Building Name": "building",
+  "Hall Type": "hall_type",
+  Day: "day",
+  "Room Capcity": "room_capacity",
+  "From Time": "start_time",
+  "To Time": "end_time",
+  Duration: "duration",
+  "Exam Date/Time": "exam_date_time",
+  "Exam Building": "exam_building",
+  "Exam Hall": "exam_hall",
+  "Teaching Hours": "teaching_hours",
+  UE: "university_elective",
+  UR: "university_requirement",
+  Semester: "semester",
+  // support older/lower‑case names as fallbacks
+  College: "college",
+  Department: "department",
+  "Course code": "course_code",
+  "Course name": "course_name",
+  Section: "section",
+  Instructor: "instructor",
+  "Exam day": "exam_day",
+  "Exam date": "exam_date",
+  "Exam start": "exam_start_time",
+  "Exam end": "exam_end_time",
+};
+
+// helper to normalise arbitrary header strings
+function normaliseKey(label: string): string {
+  const trimmed = label.trim();
+  // Use explicit mapping when available
+  if (KEY_MAP[trimmed]) return KEY_MAP[trimmed];
+  // Try case‑insensitive match
+  const lower = trimmed.toLowerCase();
+  for (const [orig, dest] of Object.entries(KEY_MAP)) {
+    if (orig.toLowerCase() === lower) return dest;
+  }
+  // Fallback: convert spaces to underscores and lowercase
+  return lower.replace(/\s+/g, "_");
+}
+
 /* ─────────────── Helper ─────────────── */
 export async function fetchSheetData(): Promise<SheetData> {
   const url = import.meta.env.VITE_GOOGLE_SHEET1;
@@ -60,8 +114,6 @@ export async function fetchSheetData(): Promise<SheetData> {
   }
   const jsonText = raw.slice(raw.indexOf("{"), raw.lastIndexOf("}") + 1);
   const { table } = JSON.parse(jsonText) as GVizResp;
-
-  console.log("Fetched sheet data from:", table);
 
   /* 2. Column metadata -------------------------------------------------- */
   const columns: ColumnMeta[] = table.cols.map((col) => ({
@@ -99,22 +151,49 @@ export async function fetchSheetData(): Promise<SheetData> {
     }
   };
 
-  /* 4. Rows with proper types ------------------------------------------ */
-  /* 4. Rows with proper types ------------------------------------------ */
   const rows: SheetRow[] = table.rows.map((row) => {
-    const obj: SheetRow = {};
-
+    const rawObj: SheetRow = {};
     row.c.forEach((cell, i) => {
       const meta = columns[i];
       const rawVal = coerce(cell?.v, meta.type);
-
-      // Use the human column name (label); fall back to A/B/C if label is empty
       const key = (meta.label ?? "").trim() || meta.id;
-      obj[key] = formatField(key, rawVal);
+      rawObj[key] = formatField(key, rawVal);
     });
-
-    return obj;
+    // remap keys on a copy so we don’t mutate while iterating
+    const remapped: SheetRow = {};
+    for (const [k, v] of Object.entries(rawObj)) {
+      const internalKey = normaliseKey(k);
+      // special handling for the exam date/time column
+      if (internalKey === "exam_date_time" && v) {
+        const asString = String(v);
+        // attempt to split "YYYY-MM-DD HH:MM - HH:MM" or similar
+        // the date is everything before the first space
+        const [datePart, timeRange] = asString.split(/\s+/, 2);
+        if (datePart) {
+          remapped["exam_date"] = datePart;
+        }
+        if (timeRange && timeRange.includes("-")) {
+          const [start, end] = timeRange.split(/[-–]/).map((s) => s.trim());
+          if (start) remapped["exam_start_time"] = start;
+          if (end) remapped["exam_end_time"] = end;
+        }
+        // also store the original string in case other components need it
+        remapped[internalKey] = v;
+        continue;
+      }
+      // convert UE/UR values into booleans
+      if (
+        internalKey === "university_elective" ||
+        internalKey === "university_requirement"
+      ) {
+        const str = String(v).trim().toLowerCase();
+        remapped[internalKey] =
+          str === "true" || str === "yes" || str === "1" || str === "y";
+        continue;
+      }
+      remapped[internalKey] = v;
+    }
+    return remapped;
   });
-
   return { columns, rows };
 }
