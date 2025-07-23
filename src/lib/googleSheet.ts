@@ -197,7 +197,13 @@ export async function fetchSheetData(): Promise<SheetData> {
           str === "true" || str === "yes" || str === "1" || str === "y";
         continue;
       }
-      remapped[internalKey] = v;
+      // For all other keys, run the value through formatField again using the
+      // normalised key.  This ensures that times like "From Time" and "To Time"
+      // (which map to `start_time` and `end_time`) are converted using the
+      // `_time` suffix, and dates are converted using the `_date` suffix.  Without
+      // this step, a Date object would be stringified with its full date, which
+      // is why years were showing up in the section search.
+      remapped[internalKey] = formatField(internalKey, v as CellValue);
     }
     return remapped;
   });

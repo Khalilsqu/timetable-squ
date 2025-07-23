@@ -124,7 +124,7 @@ export default function EntryPage() {
         Component: <MyCustomSpinner />,
       }}
       muiTableContainerProps={{
-        sx: { maxHeight: { xs: "60vh", md: "65vh", xl: "75vh" } },
+        sx: { maxHeight: { xs: "65vh", md: "70vh", xl: "80vh" } },
       }}
       renderBottomToolbarCustomActions={() => (
         <Box sx={{ flex: 1, textAlign: "left", pl: 2 }}>
