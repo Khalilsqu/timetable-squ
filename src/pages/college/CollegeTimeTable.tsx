@@ -10,11 +10,6 @@ import PageTransition from "@/src/components/layout/PageTransition";
 import { useSemesters, useScheduleRows } from "@/src/lib/queries";
 import { useFilterStore } from "@/src/stores/filterStore";
 
-import type { SheetRow } from "@/src/lib/googleSheet";
-
-/* ————— helpers ————— */
-const norm = (v: unknown) => (typeof v === "string" ? v.trim() : "");
-
 const getParam = (sp: URLSearchParams, k: string) => sp.get(k) ?? undefined;
 
 type SetSearchParams = (
@@ -39,6 +34,14 @@ const setParam = (
   replaceFn(next, { replace: true }); //
 };
 
+const baseName = (v: unknown) => {
+  const str = typeof v === "string" ? v.trim() : "";
+  return str
+    .replace(/^(?:department|college|collage)\s+of\s+/i, "")
+    .trim()
+    .toLowerCase();
+};
+
 /* ————— component ————— */
 export default function CollegeTimetable() {
   /* 1️⃣  semester */
@@ -54,10 +57,17 @@ export default function CollegeTimetable() {
   } = useScheduleRows(semester);
 
   /* 3️⃣  college options (only those that manage courses directly) */
-  const collegeOpts = useMemo<string[]>(() => {
-    return Array.from(
-      new Set(rows.map((s) => s.college).filter((c): c is string => Boolean(c)))
-    ).sort();
+  const collegeOpts = useMemo(() => {
+    const direct = new Set<string>();
+    rows.forEach((r) => {
+      const coll = r.college as string;
+      const dept = r.department as string | undefined;
+      // a course is “direct” if there is no department or the base department equals the base college
+      if (!dept || baseName(dept) === baseName(coll)) {
+        direct.add(coll);
+      }
+    });
+    return Array.from(direct).sort();
   }, [rows]);
 
   /* 4️⃣  URL param */
@@ -68,12 +78,15 @@ export default function CollegeTimetable() {
     setParam(searchParams, "college", v ?? undefined, setSearchParams);
 
   /* 5️⃣  filtered rows */
-  const filtered = useMemo<SheetRow[]>(() => {
+  // filter rows for the selected college, keeping only direct courses
+  const filtered = useMemo(() => {
     if (!collegeParam) return [];
-
-    return rows.filter(
-      (r) => norm(r.college) === norm(collegeParam) && !r.department
-    );
+    return rows.filter((r) => {
+      const sameCollege = baseName(r.college) === baseName(collegeParam);
+      const dept = r.department as string | undefined;
+      const direct = !dept || baseName(dept) === baseName(r.college);
+      return sameCollege && direct;
+    });
   }, [rows, collegeParam]);
 
   /* 6️⃣  loading / error */

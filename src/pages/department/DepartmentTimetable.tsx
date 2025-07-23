@@ -1,12 +1,7 @@
 // src/pages/student/DepartmentTimetable.tsx
 import { useMemo } from "react";
 import { useSearchParams } from "react-router";
-import {
-  Box,
-  Autocomplete,
-  TextField,
-  Typography,
-} from "@mui/material";
+import { Box, Autocomplete, TextField, Typography } from "@mui/material";
 
 import WeeklySchedule from "@/src/components/WeeklySchedule";
 import MyCustomSpinner from "@/src/components/MyCustomSpinner";
@@ -49,6 +44,14 @@ interface DepartmentOpt {
   college: string;
 }
 
+const baseName = (v: unknown) => {
+  const str = typeof v === "string" ? v.trim() : "";
+  return str
+    .replace(/^(?:department|college|collage)\s+of\s+/i, "")
+    .trim()
+    .toLowerCase();
+};
+
 export default function DepartmentTimetable() {
   /* 1️⃣  semester ------------------------------------------------------ */
   const { data: semInfo, isLoading: semLoad, error: semErr } = useSemesters();
@@ -68,8 +71,10 @@ export default function DepartmentTimetable() {
     rows.forEach((r) => {
       const dept = String(r.department ?? "").trim();
       if (!dept) return;
-      const college = String(r.college ?? "Uncategorized").trim();
-      if (!map.has(dept)) map.set(dept, { department: dept, college });
+      const coll = String(r.college ?? "").trim();
+      // skip pseudo‑departments where the base department equals the base college
+      if (baseName(dept) === baseName(coll)) return;
+      if (!map.has(dept)) map.set(dept, { department: dept, college: coll });
     });
     return Array.from(map.values()).sort((a, b) =>
       a.college === b.college

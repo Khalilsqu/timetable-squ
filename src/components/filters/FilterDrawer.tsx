@@ -61,13 +61,23 @@ const collectOptions = (rows: SheetRow[]) => {
       colleges[key] = { id: key, name: key };
     }
 
+    // collect departments only when the base name differs from the college base name
     if (typeof r.department === "string") {
-      const key = r.department;
-      departments[key] = {
-        id: key,
-        name: key,
-        college: String(r.college),
-      };
+      const dept = r.department.trim();
+      const coll = String(r.college).trim();
+      // remove common prefixes like "College of", "Collage of" or "Department of" before comparing
+      const baseDept = dept
+        .replace(/^(?:department|college|collage)\s+of\s+/i, "")
+        .trim();
+      const baseColl = coll.replace(/^(?:college|collage)\s+of\s+/i, "").trim();
+      // if the base department is non‑empty and not equal to the base college, include it
+      if (baseDept && baseDept.toLowerCase() !== baseColl.toLowerCase()) {
+        departments[dept] = {
+          id: dept,
+          name: dept,
+          college: coll,
+        };
+      }
     }
 
     if (typeof r.course_code === "string") {
