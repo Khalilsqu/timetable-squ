@@ -40,6 +40,7 @@ interface GVizResp {
   table: GVizTable;
 }
 
+// Map human‑friendly sheet headers to internal keys
 const KEY_MAP: Record<string, string> = {
   // new columns
   Collage: "college", // note the misspelling in the sheet
@@ -166,18 +167,23 @@ export async function fetchSheetData(): Promise<SheetData> {
       // special handling for the exam date/time column
       if (internalKey === "exam_date_time" && v) {
         const asString = String(v);
-        // attempt to split "YYYY-MM-DD HH:MM - HH:MM" or similar
-        // the date is everything before the first space
-        const [datePart, timeRange] = asString.split(/\s+/, 2);
-        if (datePart) {
-          remapped["exam_date"] = datePart;
+        // Parse strings like "28/12/2025 SUN 11:30:00 - 14:30:00"
+        // into separate date, day, start and end fields.  The sheet uses
+        // DD/MM/YYYY, an uppercase three‑letter day, a start time with
+        // optional seconds, a dash, and an end time.  If the format
+        // doesn’t match, we simply store the original string on
+        // `exam_date_time`.
+        const match = asString.match(
+          /(\d{2}\/\d{2}\/\d{4})\s+([A-Za-z]{3})\s+(\d{1,2}:\d{2})(?::\d{2})?\s*[-–]\s*(\d{1,2}:\d{2})(?::\d{2})?/
+        );
+        if (match) {
+          const [, date, day, start, end] = match;
+          remapped["exam_date"] = date;
+          remapped["exam_day"] = day;
+          remapped["exam_start_time"] = start;
+          remapped["exam_end_time"] = end;
         }
-        if (timeRange && timeRange.includes("-")) {
-          const [start, end] = timeRange.split(/[-–]/).map((s) => s.trim());
-          if (start) remapped["exam_start_time"] = start;
-          if (end) remapped["exam_end_time"] = end;
-        }
-        // also store the original string in case other components need it
+        // always keep the raw string too
         remapped[internalKey] = v;
         continue;
       }
