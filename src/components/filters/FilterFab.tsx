@@ -20,7 +20,7 @@ const FilterFab = () => {
       <Fab
         color="secondary"
         size="small"
-        sx={{ position: "fixed", top: 80, left: 10, zIndex: 1200 }}
+        sx={{ position: "fixed", top: 90, left: 25, zIndex: 1200 }}
         onClick={() => setOpen(true)}
         className="no-print"
       >

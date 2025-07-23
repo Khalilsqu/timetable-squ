@@ -1,7 +1,17 @@
 // src/pages/entryPage/EntryPage.tsx
 
-import { useMemo, useEffect, useTransition } from "react";
-import { MaterialReactTable, type MRT_ColumnDef } from "material-react-table";
+import { useMemo, useEffect, useTransition, useState } from "react";
+import {
+  MaterialReactTable,
+  // MRT_GlobalFilterTextField,
+  // MRT_ToggleFiltersButton,
+  type MRT_ColumnDef,
+} from "material-react-table";
+// import {
+//   MRT_ShowHideColumnsButton,
+//   MRT_ToggleDensePaddingButton,
+//   MRT_ToggleFullScreenButton,
+// } from "material-react-table";
 import type { SheetRow } from "@/src/lib/googleSheet";
 import { buildScheduleColumns } from "@/src/pages/entryPage/timetable/columns";
 import { useFilterStore } from "@/src/stores/filterStore";
@@ -9,14 +19,19 @@ import { useFilterStore } from "@/src/stores/filterStore";
 import { useSemesterLastUpdate, useSemesters } from "@/src/lib/queries";
 import { useScheduleRows } from "@/src/lib/queries";
 import MyCustomSpinner from "@/src/components/MyCustomSpinner";
-import { Box, Typography } from "@mui/material";
+import { Box, IconButton, Tooltip, Typography } from "@mui/material";
 
+import TableRowsIcon from "@mui/icons-material/TableRows"; // “show” symbol
+import CloseFullscreenIcon from "@mui/icons-material/CloseFullscreen"; // “hide” symbol
+// import DownloadIcon from "@mui/icons-material/Download";
+// import { mkConfig, generateCsv, download } from "export-to-csv";
 /* ———————————————————————————————————————————
    Main viewer component
    ——————————————————————————————————————————— */
 export default function EntryPage() {
   const [isPending, startTransition] = useTransition();
   const { pagination, setPagination } = useFilterStore();
+  const [showPagination, setShowPagination] = useState(false);
 
   /* 1. fetch + preprocess */
 
@@ -100,14 +115,29 @@ export default function EntryPage() {
   /* 3. data is memoised to avoid re-renders on other state changes */
   const tableData = useMemo(() => filteredRows, [filteredRows]);
 
+  // const csvConfig = useMemo(
+  //   () =>
+  //     mkConfig({
+  //       filename: `schedule_${semester || "all"}`, // exported file name
+  //       fieldSeparator: ",",
+  //       decimalSeparator: ".",
+  //       useKeysAsHeaders: true, // header row
+  //     }),
+  //   [semester]
+  // );
+
   /* 4. render */
   return (
     <MaterialReactTable
+      // virtualize rows and columns for performance on large datasets
+      enableRowVirtualization
+      enableColumnVirtualization
+      enablePagination={showPagination}
       columns={columns}
       data={tableData}
       rowCount={filteredRows.length}
+      initialState={{ density: "compact" }}
       state={{
-        density: "compact",
         isLoading: rowsLoading || semLoading || lastUpdateLoading,
         showProgressBars: rowsFetching || semFetching || lastUpdateFetching,
         pagination: {
@@ -126,20 +156,95 @@ export default function EntryPage() {
       muiTableContainerProps={{
         sx: { maxHeight: { xs: "65vh", md: "70vh", xl: "80vh" } },
       }}
+      muiPaginationProps={{
+        rowsPerPageOptions: [
+          { label: "10", value: 10 },
+          { label: "25", value: 25 },
+          { label: "50", value: 50 },
+          { label: "100", value: 100 },
+          { label: "200", value: 200 },
+        ],
+      }}
       renderBottomToolbarCustomActions={() => (
-        <Box sx={{ flex: 1, textAlign: "left", pl: 2 }}>
+        <Box
+          sx={{
+            flex: "1 1 auto",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            px: 2,
+          }}
+        >
+          {/* LEFT  – existing “last updated” stamp */}
           {lastUpdateData && (
             <Typography variant="caption" color="text.secondary">
               Last updated:{" "}
-              {lastUpdateData?.parsed.toLocaleString("en-US", {
+              {lastUpdateData.parsed.toLocaleDateString("en-US", {
                 month: "short",
                 day: "2-digit",
                 year: "numeric",
               })}
             </Typography>
           )}
+
+          {/* RIGHT  – your new action buttons */}
+          <Box sx={{ display: "flex", gap: 1 }}>
+            <Tooltip
+              title={showPagination ? "Hide Pagination" : "Show Pagination"}
+              arrow
+            >
+              <IconButton
+                size="small"
+                color="primary"
+                onClick={() => setShowPagination((p) => !p)}
+                aria-label={
+                  showPagination ? "hide pagination" : "show pagination"
+                }
+              >
+                {showPagination ? <CloseFullscreenIcon /> : <TableRowsIcon />}
+              </IconButton>
+            </Tooltip>
+          </Box>
         </Box>
       )}
+      // renderToolbarInternalActions={({ table }) => (
+      //   <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+      //     {/* built-in buttons */}
+      //     <MRT_GlobalFilterTextField table={table} />
+      //     <MRT_ToggleFiltersButton table={table} />
+      //     <MRT_ShowHideColumnsButton table={table} />
+      //     <MRT_ToggleDensePaddingButton table={table} />
+      //     <MRT_ToggleFullScreenButton table={table} />
+
+      //     {/* custom download button */}
+      //     <Tooltip title="Download CSV" arrow>
+      //       <IconButton
+      //         size="small"
+      //         color="primary"
+      //         onClick={() => {
+      //           const allRows = table
+      //             .getPrePaginationRowModel()
+      //             .rows.map((r) => r.original);
+
+      //           // convert Dates → strings for export-to-csv
+      //           const cleaned = allRows.map((row) =>
+      //             Object.fromEntries(
+      //               Object.entries(row).map(([k, v]) => [
+      //                 k,
+      //                 v instanceof Date ? v.toISOString() : v,
+      //               ])
+      //             )
+      //           );
+
+      //           const csv = generateCsv(csvConfig)(cleaned);
+      //           download(csvConfig)(csv);
+      //         }}
+      //       >
+      //         <DownloadIcon />
+      //       </IconButton>
+      //     </Tooltip>
+      //   </Box>
+      // )}
     />
   );
 }
