@@ -1,0 +1,84 @@
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  --primary: rgb(255, 255, 255);
+  --secondary: rgb(145, 145, 145);
+}
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--secondary) var(--primary);
+}
+
+/* Chrome, Edge, and Safari */
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--primary);
+  border-radius: 5px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: var(--secondary);
+  border-radius: 5px;
+  border: 3px solid var(--primary);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+.nav-link {
+  text-decoration: none;
+  font-weight: 400;
+}
+.nav-link--active {
+  font-weight: 700;
+  border-bottom: 2px solid currentColor;
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  /* ensure A4 Landscape margins */
+  @page {
+    size: A4 landscape;
+    margin: 5mm;
+  }
+
+  /* let the container expand & use full page width */
+  .MuiTableContainer-root {
+    overflow-x: visible !important;
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  /* make the actual table fill the container */
+  .MuiTable-root {
+    min-width: 0 !important;
+    width: 100% !important;
+    table-layout: fixed; /* evenly distributes columns */
+  }
+
+  /* optional: wrap long cell text */
+  .MuiTableCell-root {
+    white-space: normal !important;
+    word-wrap: break-word !important;
+  }
+
+  /* dimmer dashed line between col 1 & 2 */
+  .MuiTable-root th:first-of-type,
+  .MuiTable-root td:first-of-type {
+    /* increase width if too thin */
+    border-right: 1.5px dashed rgba(0, 0, 0, 0.2) !important;
+  }
+}
