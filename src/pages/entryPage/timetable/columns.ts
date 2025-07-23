@@ -16,14 +16,10 @@ const COLUMN_ORDER: { key: keyof SheetRow; title: string }[] = [
   { key: "building", title: "Building" },
   { key: "college", title: "College" },
   { key: "department", title: "Department" },
-  // optional new columns
-  { key: "credit_hours", title: "Credit Hours" },
-  { key: "students_in_section", title: "Enrolled" },
-  { key: "max_students", title: "Capacity" },
-  { key: "room_capacity", title: "Room Cap." },
-  { key: "exam_building", title: "Exam Bldg" },
-  { key: "exam_hall", title: "Exam Hall" },
-  { key: "teaching_hours", title: "Teaching Hrs" },
+  { key: "exam_date", title: "Exam Date" },
+  { key: "exam_day", title: "Exam Day" },
+  { key: "exam_start_time", title: "Exam Start" },
+  { key: "exam_end_time", title: "Exam End" },
 ];
 
 /* ———————————————————————————————————————————
