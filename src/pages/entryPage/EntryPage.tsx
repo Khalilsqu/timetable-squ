@@ -21,8 +21,9 @@ import { useScheduleRows } from "@/src/lib/queries";
 import MyCustomSpinner from "@/src/components/MyCustomSpinner";
 import { Box, IconButton, Tooltip, Typography } from "@mui/material";
 
-import TableRowsIcon from "@mui/icons-material/TableRows"; // “show” symbol
-import CloseFullscreenIcon from "@mui/icons-material/CloseFullscreen"; // “hide” symbol
+import UnfoldLessOutlinedIcon from "@mui/icons-material/UnfoldLessOutlined";
+import UnfoldMoreOutlinedIcon from "@mui/icons-material/UnfoldMoreOutlined";
+
 // import DownloadIcon from "@mui/icons-material/Download";
 // import { mkConfig, generateCsv, download } from "export-to-csv";
 /* ———————————————————————————————————————————
@@ -154,7 +155,7 @@ export default function EntryPage() {
         Component: <MyCustomSpinner />,
       }}
       muiTableContainerProps={{
-        sx: { maxHeight: { xs: "65vh", md: "70vh", xl: "80vh" } },
+        sx: { maxHeight: { xs: "65vh", md: "70vh", xl: "78vh" } },
       }}
       muiPaginationProps={{
         rowsPerPageOptions: [
@@ -198,10 +199,14 @@ export default function EntryPage() {
                 color="primary"
                 onClick={() => setShowPagination((p) => !p)}
                 aria-label={
-                  showPagination ? "hide pagination" : "show pagination"
+                  showPagination ? "collapse pagination" : "expand pagination"
                 }
               >
-                {showPagination ? <CloseFullscreenIcon /> : <TableRowsIcon />}
+                {showPagination ? (
+                  <UnfoldLessOutlinedIcon />
+                ) : (
+                  <UnfoldMoreOutlinedIcon />
+                )}
               </IconButton>
             </Tooltip>
           </Box>
