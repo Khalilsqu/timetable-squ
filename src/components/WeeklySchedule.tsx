@@ -112,7 +112,7 @@ export default function WeeklySchedule({
         className="no-print"
       >
         <Typography variant="h6">
-          Weekly Schedule{semester && ` · ${semester}`}
+          Weekly Schedule{semester && `: ${semester}`}
         </Typography>
         <Button
           variant="outlined"

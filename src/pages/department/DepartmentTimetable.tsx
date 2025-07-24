@@ -1,11 +1,19 @@
 // src/pages/student/DepartmentTimetable.tsx
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router";
-import { Box, Autocomplete, TextField, Typography } from "@mui/material";
+import {
+  Box,
+  Autocomplete,
+  TextField,
+  Typography,
+  Switch,
+  FormControlLabel,
+} from "@mui/material";
 
 import WeeklySchedule from "@/src/components/WeeklySchedule";
 import MyCustomSpinner from "@/src/components/MyCustomSpinner";
 import PageTransition from "@/src/components/layout/PageTransition";
+import FinalExamSchedule from "@/src/pages/department/FinalExamSchedule";
 
 import { useSemesters, useScheduleRows } from "@/src/lib/queries";
 import { useFilterStore } from "@/src/stores/filterStore";
@@ -99,6 +107,8 @@ export default function DepartmentTimetable() {
   }, [rows, selectedOpt]);
 
   /* 6️⃣  ui state ------------------------------------------------------ */
+  // toggle between course sessions and final exam schedule
+  const [showExams, setShowExams] = useState(false);
 
   if (semLoad || rowLoad) return <MyCustomSpinner />;
 
@@ -133,13 +143,37 @@ export default function DepartmentTimetable() {
           />
         </Box>
 
-        {/* weekly view or prompt */}
+        {/* toggle sessions vs exams */}
+        {selectedOpt && (
+          <Box mb={2} className="no-print">
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={showExams}
+                  onChange={() => setShowExams((p) => !p)}
+                  color="primary"
+                />
+              }
+              label={showExams ? "Final Exam Schedule" : "Course Sessions"}
+            />
+          </Box>
+        )}
+
+        {/* schedule view or prompt */}
         {selectedOpt ? (
-          <WeeklySchedule
-            data={filtered}
-            semester={semester ?? undefined}
-            hideTooltip // optional: hide course-name icon
-          />
+          showExams ? (
+            <FinalExamSchedule
+              data={filtered}
+              department={selectedOpt.department}
+              semester={semester ?? undefined}
+            />
+          ) : (
+            <WeeklySchedule
+              data={filtered}
+              semester={semester ?? undefined}
+              hideTooltip // optional: hide course-name icon
+            />
+          )
         ) : (
           <Typography
             variant="body1"
