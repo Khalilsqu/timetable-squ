@@ -133,6 +133,10 @@ export default function EntryPage() {
       // virtualize rows and columns for performance on large datasets
       enableRowVirtualization
       enableColumnVirtualization
+      // allow user to resize columns
+      enableColumnResizing
+      columnResizeMode="onChange"
+      // control pagination visibility
       enablePagination={showPagination}
       columns={columns}
       data={tableData}
@@ -165,6 +169,12 @@ export default function EntryPage() {
           { label: "100", value: 100 },
           { label: "200", value: 200 },
         ],
+      }}
+      muiTableHeadCellProps={{
+        sx: { whiteSpace: "normal", wordBreak: "break-word" },
+      }}
+      muiTableBodyCellProps={{
+        sx: { whiteSpace: "normal", wordBreak: "break-word" },
       }}
       renderBottomToolbarCustomActions={() => (
         <Box
