@@ -44,8 +44,6 @@ export async function fetchSemesters(): Promise<SemesterInfo> {
   const jsonText = raw.slice(raw.indexOf("{"), raw.lastIndexOf("}") + 1);
   const { table } = JSON.parse(jsonText) as GVizResp;
 
-  console.log("Fetched semesters from:", table);
-
   /* 2 – try normal lookup first */
   const norm = (s: string | undefined) => (s ?? "").trim().toLowerCase();
   let semIdx = table.cols.findIndex((c) => norm(c.label) === "semester");
