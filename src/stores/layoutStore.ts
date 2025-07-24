@@ -8,6 +8,8 @@ type LayoutStore = {
   setIsBreakPoint: (isBreakPoint: boolean) => void;
   isDarkTheme: boolean;
   setIsDarkTheme: (isDarkTheme: boolean) => void;
+  showExams: boolean;
+  setShowExams: (show: boolean) => void;
 };
 
 export const useLayoutStore = create<LayoutStore>((set) => ({
@@ -17,5 +19,7 @@ export const useLayoutStore = create<LayoutStore>((set) => ({
   setIsBreakPoint: (isBreakPoint) => set({ isBreakPoint }),
   isDarkTheme: false,
   setIsDarkTheme: (isDarkTheme) => set({ isDarkTheme }),
+  // persistent toggle between course sessions and exams
+  showExams: false,
+  setShowExams: (show) => set({ showExams: show }),
 }));
-

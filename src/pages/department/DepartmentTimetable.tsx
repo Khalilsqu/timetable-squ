@@ -1,5 +1,5 @@
 // src/pages/student/DepartmentTimetable.tsx
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useSearchParams } from "react-router";
 import {
   Box,
@@ -17,6 +17,7 @@ import FinalExamSchedule from "@/src/pages/department/FinalExamSchedule";
 
 import { useSemesters, useScheduleRows } from "@/src/lib/queries";
 import { useFilterStore } from "@/src/stores/filterStore";
+import { useLayoutStore } from "@/src/stores/layoutStore";
 
 import type { SheetRow } from "@/src/lib/googleSheet";
 
@@ -107,8 +108,9 @@ export default function DepartmentTimetable() {
   }, [rows, selectedOpt]);
 
   /* 6️⃣  ui state ------------------------------------------------------ */
-  // toggle between course sessions and final exam schedule
-  const [showExams, setShowExams] = useState(false);
+  // persistent toggle between course sessions and final exam schedule
+  const showExams = useLayoutStore((s) => s.showExams);
+  const setShowExams = useLayoutStore((s) => s.setShowExams);
 
   if (semLoad || rowLoad) return <MyCustomSpinner />;
 
@@ -150,7 +152,7 @@ export default function DepartmentTimetable() {
               control={
                 <Switch
                   checked={showExams}
-                  onChange={() => setShowExams((p) => !p)}
+                  onChange={() => setShowExams(!showExams)}
                   color="primary"
                 />
               }
