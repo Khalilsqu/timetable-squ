@@ -77,16 +77,18 @@ export default function SectionSearch({
           label={
             chosen.length
               ? `Search more courses (selected: ${chosen.length})`
-              : "Search by course code"
+              : "Type to search by course code"
           }
-          InputProps={{
-            ...params.InputProps,
-            endAdornment: (
-              <>
-                {loading && <CircularProgress size={20} />}
-                {params.InputProps.endAdornment}
-              </>
-            ),
+          slotProps={{
+            input: {
+              ...params.InputProps,
+              endAdornment: (
+                <>
+                  {loading && <CircularProgress size={20} />}
+                  {params.InputProps.endAdornment}
+                </>
+              ),
+            },
           }}
         />
       )}
@@ -95,4 +97,3 @@ export default function SectionSearch({
     />
   );
 }
-

@@ -67,7 +67,7 @@ export default function InstructorTimetable() {
       <Box p={2}>
         {/* title */}
         <Typography variant="h5" mb={3}>
-          Instructor Timetable{semester ? ` · ${semester}` : ""}
+          Instructor Timetable{semester ? `: ${semester}` : ""}
         </Typography>
 
         {/* instructor selector */}

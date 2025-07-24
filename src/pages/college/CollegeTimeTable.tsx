@@ -105,7 +105,7 @@ export default function CollegeTimetable() {
       <Box p={2}>
         {/* title */}
         <Typography variant="h5" mb={3}>
-          College Schedule{semester ? ` · ${semester}` : ""}
+          College Schedule{semester ? `: ${semester}` : ""}
         </Typography>
 
         {/* selector */}

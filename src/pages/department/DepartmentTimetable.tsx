@@ -132,7 +132,7 @@ export default function DepartmentTimetable() {
       <Box p={2}>
         {/* title */}
         <Typography variant="h5" mb={3}>
-          Department Schedule{semester ? ` · ${semester}` : ""}
+          Department Schedule{semester ? `: ${semester}` : ""}
         </Typography>
 
         {/* department selector */}
