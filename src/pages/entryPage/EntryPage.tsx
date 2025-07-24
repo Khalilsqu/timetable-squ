@@ -198,8 +198,14 @@ export default function EntryPage() {
             </Typography>
           )}
 
-          {/* RIGHT  – your new action buttons */}
-          <Box sx={{ display: "flex", gap: 1 }}>
+          {/* RIGHT – filtered count and toggle */}
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            {/* show count when pagination is disabled */}
+            {!showPagination && (
+              <Typography variant="caption" color="text.secondary">
+                {filteredRows.length} rows
+              </Typography>
+            )}
             <Tooltip
               title={showPagination ? "Hide Pagination" : "Show Pagination"}
               arrow
