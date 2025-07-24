@@ -17,7 +17,7 @@ import FinalExamSchedule from "@/src/pages/department/FinalExamSchedule";
 
 import { useSemesters, useScheduleRows } from "@/src/lib/queries";
 import { useFilterStore } from "@/src/stores/filterStore";
-import { useLayoutStore } from "@/src/stores/layoutStore";
+// showExams state moved to URL search params; store import removed
 
 import type { SheetRow } from "@/src/lib/googleSheet";
 
@@ -108,9 +108,14 @@ export default function DepartmentTimetable() {
   }, [rows, selectedOpt]);
 
   /* 6️⃣  ui state ------------------------------------------------------ */
-  // persistent toggle between course sessions and final exam schedule
-  const showExams = useLayoutStore((s) => s.showExams);
-  const setShowExams = useLayoutStore((s) => s.setShowExams);
+  // toggle sessions vs exams via URL search params
+  const showExams = searchParams.get("exams") === "true";
+  const setShowExams = (val: boolean) => {
+    const next = new URLSearchParams(searchParams);
+    if (val) next.set("exams", "true");
+    else next.delete("exams");
+    setSearchParams(next, { replace: true });
+  };
 
   if (semLoad || rowLoad) return <MyCustomSpinner />;
 
