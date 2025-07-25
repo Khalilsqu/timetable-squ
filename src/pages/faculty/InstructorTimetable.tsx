@@ -1,7 +1,16 @@
-// src/pages/student/InstructorTimetable.tsx
+// src/pages/faculty/InstructorTimetable.tsx
 import { useMemo } from "react";
-import { Box, Autocomplete, TextField, Typography } from "@mui/material";
+import { useSearchParams } from "react-router";
+import {
+  Box,
+  Autocomplete,
+  TextField,
+  Typography,
+  Switch,
+  FormControlLabel,
+} from "@mui/material";
 
+import FinalExamSchedule from "@/src/components/FinalExamSchedule";
 import WeeklySchedule from "@/src/components/WeeklySchedule";
 import MyCustomSpinner from "@/src/components/MyCustomSpinner";
 import PageTransition from "@/src/components/layout/PageTransition";
@@ -17,6 +26,16 @@ const norm = (v: unknown) => (typeof v === "string" ? v.trim() : "");
 
 /* ——— component ——— */
 export default function InstructorTimetable() {
+  // use URL search param "instExams" instead of local state
+  const [searchParams, setSearchParams] = useSearchParams();
+  const showExams = searchParams.get("instExams") === "true";
+  const setShowExams = (val: boolean) => {
+    const next = new URLSearchParams(searchParams);
+    if (val) next.set("instExams", "true");
+    else next.delete("instExams");
+    setSearchParams(next, { replace: true });
+  };
+
   /* 1️⃣  semester ------------------------------------------------------ */
   const { data: semInfo, isLoading: semLoad, error: semErr } = useSemesters();
   const storeSem = useFilterStore((s) => s.semester);
@@ -84,9 +103,31 @@ export default function InstructorTimetable() {
           />
         </Box>
 
-        {/* weekly grid or prompt */}
+        {/* toggle sessions vs exams */}
+        {selectedInstructors.length > 0 && (
+          <Box mb={2} className="no-print">
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={showExams}
+                  onChange={() => setShowExams(!showExams)}
+                  color="primary"
+                />
+              }
+              label={showExams ? "Final Exam Schedule" : "Course Sessions"}
+            />
+          </Box>
+        )}
+
+        {/* schedule view or prompt */}
         {selectedInstructors.length > 0 ? (
-          filtered.length ? (
+          showExams ? (
+            <FinalExamSchedule
+              data={filtered}
+              department={selectedInstructors.join(", ")}
+              semester={semester ?? undefined}
+            />
+          ) : filtered.length ? (
             <WeeklySchedule
               data={filtered}
               semester={semester ?? undefined}
@@ -107,7 +148,7 @@ export default function InstructorTimetable() {
             color="text.secondary"
             sx={{ mt: 2, textAlign: "center" }}
           >
-            Please select one or more instructors to view their weekly schedule.
+            Please select one or more instructors to view their schedule.
           </Typography>
         )}
       </Box>

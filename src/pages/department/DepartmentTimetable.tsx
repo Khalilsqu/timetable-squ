@@ -13,7 +13,7 @@ import {
 import WeeklySchedule from "@/src/components/WeeklySchedule";
 import MyCustomSpinner from "@/src/components/MyCustomSpinner";
 import PageTransition from "@/src/components/layout/PageTransition";
-import FinalExamSchedule from "@/src/pages/department/FinalExamSchedule";
+import FinalExamSchedule from "@/src/components/FinalExamSchedule";
 
 import { useSemesters, useScheduleRows } from "@/src/lib/queries";
 import { useFilterStore } from "@/src/stores/filterStore";
