@@ -5,6 +5,7 @@ import { useLayoutStore } from "@/src/stores/layoutStore";
 import AppHeader from "./AppHeader";
 import FilterFab from "@/src/components/filters/FilterFab";
 import GlobalErrorHandler from "@/src/components/GlobalErrorSnackbar";
+import SessionWelcome from "@/src/components/SessionWelcome";
 
 import ScrollTop from "./useScrollTrigger";
 
@@ -25,6 +26,7 @@ const MainLayout = () => {
         overflow="hidden"
       >
         <AppHeader />
+        <SessionWelcome />
 
         {/* content area grows and hides its own overflow */}
         <Box flex={1} overflow="hidden" p={3}>
@@ -40,4 +42,3 @@ const MainLayout = () => {
 };
 
 export default MainLayout;
-
