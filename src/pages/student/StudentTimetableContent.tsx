@@ -1,6 +1,7 @@
 // src/pages/student/StudentTimetableContent.tsx
-import { Box, Typography } from "@mui/material";
+import { Box, Typography, Stack } from "@mui/material";
 import { useMemo } from "react";
+import AllowConflictsToggle from "@/src/pages/student/AllowConflictsToggle";
 
 import { useFilterStore } from "@/src/stores/filterStore";
 import {
@@ -112,7 +113,7 @@ export default function StudentTimetableContent() {
   }, [rows]);
 
   /* 4️⃣  timetable store ---------------------------------------------- */
-  const { chosen, pick, remove } = useTimetableStore();
+  const { chosen, pick, remove, allowConflicts } = useTimetableStore();
 
   /* 5️⃣  weekly grid rows --------------------------------------------- */
   const scheduleData = useMemo<SheetRow[]>(() => {
@@ -181,14 +182,23 @@ export default function StudentTimetableContent() {
   /* 8️⃣  render -------------------------------------------------------- */
   return (
     <Box p={2}>
-      {/* search */}
-      <SectionSearch
-        sections={sections}
-        chosen={chosen}
-        onPick={pick}
-        getConflictReason={conflictReason}
-        loading={rowsLoading}
-      />
+      <Stack
+        direction={{ xs: "column", lg: "row" }}
+        alignItems={{ xs: "flex-start", lg: "center" }}
+        spacing={2}
+      >
+        {/* search */}
+        <Box flex={1} width="100%">
+          <SectionSearch
+            sections={sections}
+            chosen={chosen}
+            onPick={pick}
+            getConflictReason={allowConflicts ? () => null : conflictReason}
+            loading={rowsLoading}
+          />
+        </Box>
+        <AllowConflictsToggle />
+      </Stack>
 
       {/* chips */}
       <SelectedCourseChips chosen={chosen} onRemove={remove} />

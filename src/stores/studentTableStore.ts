@@ -15,13 +15,16 @@ interface TimetableState {
   pick: (sec: SectionOpt) => void;
   remove: (id: string) => void;
   clear: () => void;
+  allowConflicts: boolean;
+  toggleAllowConflicts: () => void;
 }
 
 export const useTimetableStore = create<TimetableState>((set) => ({
   chosen: [],
   pick: (sec) => set((s) => ({ chosen: [...s.chosen, sec] })),
-  remove: (id) =>
-    set((s) => ({ chosen: s.chosen.filter((c) => c.id !== id) })),
+  remove: (id) => set((s) => ({ chosen: s.chosen.filter((c) => c.id !== id) })),
   clear: () => set({ chosen: [] }),
+  allowConflicts: false,
+  toggleAllowConflicts: () =>
+    set((s) => ({ allowConflicts: !s.allowConflicts })),
 }));
-

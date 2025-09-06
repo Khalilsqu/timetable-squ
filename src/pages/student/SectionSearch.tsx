@@ -25,10 +25,13 @@ export default function SectionSearch({
 }: Props) {
   return (
     <Autocomplete
+      sx={{ width: "100%" }}
       options={sections}
       getOptionLabel={(o) => o.label}
       isOptionEqualToValue={(o, v) => o.id === v.id}
-      onChange={(_, v) => v && onPick(v)}
+      onChange={(_, v) => {
+        if (v && !chosen.some((c) => c.id === v.id)) onPick(v);
+      }}
       getOptionDisabled={(opt) => !!getConflictReason(opt, chosen)}
       value={null}
       filterOptions={(opts, state) =>
@@ -79,6 +82,7 @@ export default function SectionSearch({
               ? `Search more courses (selected: ${chosen.length})`
               : "Type to search by course code"
           }
+          fullWidth
           slotProps={{
             input: {
               ...params.InputProps,
