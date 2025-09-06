@@ -1,5 +1,5 @@
 // src/pages/student/DepartmentTimetable.tsx
-import { useMemo } from "react";
+import { useMemo, useCallback, useEffect } from "react";
 import { useSearchParams } from "react-router";
 import {
   Box,
@@ -8,7 +8,10 @@ import {
   Typography,
   Switch,
   FormControlLabel,
+  IconButton,
 } from "@mui/material";
+import TuneIcon from "@mui/icons-material/Tune";
+// CloseIcon now used inside DepartmentFilterDrawer
 
 import WeeklySchedule from "@/src/components/WeeklySchedule";
 import MyCustomSpinner from "@/src/components/MyCustomSpinner";
@@ -17,6 +20,8 @@ import FinalExamSchedule from "@/src/components/FinalExamSchedule";
 
 import { useSemesters, useScheduleRows } from "@/src/lib/queries";
 import { useFilterStore } from "@/src/stores/filterStore";
+import { useDepartmentFilterStore } from "@/src/stores/departmentFilterStore";
+import DepartmentFilterDrawer from "@/src/pages/department/DepartmentFilterDrawer";
 // showExams state moved to URL search params; store import removed
 
 import type { SheetRow } from "@/src/lib/googleSheet";
@@ -107,6 +112,83 @@ export default function DepartmentTimetable() {
     return rows.filter((r) => String(r.department) === selectedOpt.department);
   }, [rows, selectedOpt]);
 
+  /* 5.1️⃣  derive instructor & course option lists (after dept filter) */
+  const instructorOptions = useMemo(() => {
+    const set = new Set<string>();
+    filtered.forEach((r) => {
+      const inst = String(r.instructor ?? "").trim();
+      if (inst) set.add(inst);
+    });
+    return Array.from(set).sort();
+  }, [filtered]);
+
+  const courseOptions = useMemo(
+    () =>
+      Array.from(
+        new Map(
+          filtered
+            .filter((r) => r.course_code)
+            .map((r) => [
+              String(r.course_code),
+              `${r.course_code as string} — ${r.course_name as string}`,
+            ])
+        ).entries()
+      )
+        .map(([code, label]) => ({ code, label }))
+        .sort((a, b) => a.code.localeCompare(b.code)),
+    [filtered]
+  );
+
+  /* 5.2️⃣  filter selections moved to zustand (empty = show all) */
+  const {
+    instructors: selInstructors,
+    courses: selCourses,
+    openDrawer,
+    setInstructors,
+    setCourses,
+    // others handled inside DepartmentFilterDrawer
+  } = useDepartmentFilterStore();
+
+  const applyRowFilters = useCallback(
+    (rowsIn: SheetRow[]) => {
+      return rowsIn.filter((r) => {
+        const inst = String(r.instructor ?? "").trim();
+        const course = String(r.course_code ?? "").trim();
+        const instOk =
+          selInstructors.length === 0 || selInstructors.includes(inst);
+        const courseOk = selCourses.length === 0 || selCourses.includes(course);
+        return instOk && courseOk;
+      });
+    },
+    [selInstructors, selCourses]
+  );
+
+  const finalFiltered = useMemo(
+    () => applyRowFilters(filtered),
+    [filtered, applyRowFilters]
+  );
+
+  /* 5.2.b️⃣ prune selections when options shrink or department changes */
+  useEffect(() => {
+    if (selInstructors.length) {
+      const valid = new Set(instructorOptions);
+      const keep = selInstructors.filter((i) => valid.has(i));
+      if (keep.length !== selInstructors.length) setInstructors(keep);
+    }
+    if (selCourses.length) {
+      const valid = new Set(courseOptions.map((c) => c.code));
+      const keep = selCourses.filter((c) => valid.has(c));
+      if (keep.length !== selCourses.length) setCourses(keep);
+    }
+  }, [
+    instructorOptions,
+    courseOptions,
+    selInstructors,
+    selCourses,
+    setInstructors,
+    setCourses,
+  ]);
+
   /* 6️⃣  ui state ------------------------------------------------------ */
   // toggle sessions vs exams via URL search params
   const showExams = searchParams.get("exams") === "true";
@@ -152,7 +234,13 @@ export default function DepartmentTimetable() {
 
         {/* toggle sessions vs exams */}
         {selectedOpt && (
-          <Box mb={2} className="no-print">
+          <Box
+            mb={2}
+            className="no-print"
+            display="flex"
+            alignItems="center"
+            justifyContent="space-between"
+          >
             <FormControlLabel
               control={
                 <Switch
@@ -163,6 +251,14 @@ export default function DepartmentTimetable() {
               }
               label={showExams ? "Final Exam Schedule" : "Course Sessions"}
             />
+            <IconButton
+              aria-label="filters"
+              onClick={openDrawer}
+              size="small"
+              className="no-print"
+            >
+              <TuneIcon />
+            </IconButton>
           </Box>
         )}
 
@@ -170,13 +266,13 @@ export default function DepartmentTimetable() {
         {selectedOpt ? (
           showExams ? (
             <FinalExamSchedule
-              data={filtered}
+              data={finalFiltered}
               department={selectedOpt.department}
               semester={semester ?? undefined}
             />
           ) : (
             <WeeklySchedule
-              data={filtered}
+              data={finalFiltered}
               semester={semester ?? undefined}
               hideTooltip // optional: hide course-name icon
             />
@@ -191,6 +287,12 @@ export default function DepartmentTimetable() {
           </Typography>
         )}
       </Box>
+
+      <DepartmentFilterDrawer
+        instructorOptions={instructorOptions}
+        courseOptions={courseOptions}
+        showExams={showExams}
+      />
     </PageTransition>
   );
 }
