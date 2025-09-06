@@ -60,10 +60,9 @@ export default function SessionWelcome() {
           </Stack>
           <Alert severity="info" icon={false} sx={{ borderRadius: 1 }}>
             <Typography variant="body2" sx={{ textAlign: "justify", mb: 1.5 }}>
-              This App is not endorsed by or
-              connected to SQU. Course details may be outdated or incomplete;
-              always verify in the official SIS. Data shown here is not synced
-              live with SIS.
+              This App is not endorsed by SQU. Course details may be outdated or
+              incomplete; always verify in the official SIS. Data shown here is
+              not synced live with SIS.
               <br />
               <br />
             </Typography>
