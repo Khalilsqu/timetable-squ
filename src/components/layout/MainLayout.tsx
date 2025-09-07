@@ -28,8 +28,17 @@ const MainLayout = () => {
         <AppHeader />
         <SessionWelcome />
 
-        {/* content area grows and hides its own overflow */}
-        <Box flex={1} overflow="hidden" p={3}>
+        {/* content area */}
+        <Box
+          component="main"
+          flex={1}
+          overflow="hidden"
+          sx={{
+            // responsive padding (was p={3})
+            p: { xs: 1.5, sm: 2, md: 3 },
+          }}
+        >
+          {/* Removed extra pt; AppHeader already inserts a spacer div */}
           <Outlet />
           <FilterFab />
         </Box>
