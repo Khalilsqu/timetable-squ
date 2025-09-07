@@ -2,21 +2,25 @@ name: Build and Deploy to GitHub Pages
 
 on:
   push:
-    branches: ["main"] # Trigger the workflow on pushes to the main branch
+    branches: ["main"]
 
 jobs:
   build-and-deploy:
-    runs-on: ubuntu-latest # Use the latest Ubuntu runner
+    runs-on: ubuntu-latest
+
+    # 🔑 This is the change you need to make
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout 🛎️
-        uses: actions/checkout@v4 # Check out your repository code
+        uses: actions/checkout@v4
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20" # Specify the Node.js version
-          cache: "npm" # Cache npm dependencies
+          node-version: "20"
+          cache: "npm"
 
       - name: Install Dependencies
         run: npm install
@@ -24,7 +28,6 @@ jobs:
       - name: Build Project
         run: npm run build
         env:
-          # Pass the repository secret to the build script as an environment variable
           VITE_GOOGLE_SHEET1: ${{ secrets.VITE_GOOGLE_SHEET1 }}
           VITE_GOOGLE_SHEET2: ${{ secrets.VITE_GOOGLE_SHEET2 }}
           VITE_GOOGLE_SHEET3: ${{ secrets.VITE_GOOGLE_SHEET3 }}
@@ -33,4 +36,4 @@ jobs:
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist # The directory your build command outputs to
+          publish_dir: ./dist
