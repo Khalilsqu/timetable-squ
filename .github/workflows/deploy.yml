@@ -30,6 +30,7 @@ jobs:
 
       # SPA routing fix + avoid Jekyll processing
       - run: |
+          echo "tt.khalilalhooti.com" > dist/CNAME 
           cp dist/index.html dist/404.html
           touch dist/.nojekyll
 
