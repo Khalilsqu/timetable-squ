@@ -11,5 +11,5 @@ export default defineConfig({
       "@": resolve(__dirname, "."),
     },
   },
-  base: "/timetable-squ/",
+  // base: "/timetable-squ/",
 });
