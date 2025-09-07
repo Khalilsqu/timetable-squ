@@ -31,6 +31,7 @@ import {
   type TimeFilterMode,
 } from "@/src/stores/commonSlotStore";
 import CommonSlotHelpDialog from "./CommonSlotHelpDialog";
+import CommonSlotDownloadButton from "./CommonSlotDownloadButton";
 
 /* ---------- Time helpers ---------- */
 const toMinutes = (t: string) => {
@@ -272,6 +273,12 @@ export default function CommonSlot() {
                 <RefreshIcon fontSize="small" />
               </IconButton>
             </Tooltip>
+
+            <CommonSlotDownloadButton
+              rows={filtered}
+              columns={columns}
+              semester={semester}
+            />
           </Box>
 
           <Divider />
