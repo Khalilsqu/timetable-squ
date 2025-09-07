@@ -15,6 +15,7 @@ import {
   Tooltip,
 } from "@mui/material";
 import RefreshIcon from "@mui/icons-material/Refresh";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 
 import PageTransition from "@/src/components/layout/PageTransition";
 import WeeklySchedule from "@/src/components/WeeklySchedule";
@@ -207,6 +208,7 @@ export default function CommonSlot() {
                 fontWeight: 600,
                 letterSpacing: 0.5,
                 display: "inline-flex",
+                gap: 0.4,
                 alignItems: "center",
                 justifyContent: "center",
                 textTransform: "uppercase",
@@ -221,6 +223,14 @@ export default function CommonSlot() {
               }}
             >
               HELP
+              <InfoOutlinedIcon
+                fontSize="inherit"
+                sx={{
+                  fontSize: 14,
+                  mt: "-1px",
+                }}
+                aria-hidden="true"
+              />
             </Box>
           </Tooltip>
         </Typography>
