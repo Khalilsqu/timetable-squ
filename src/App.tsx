@@ -33,7 +33,7 @@ const AnimatedRoutes = () => {
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/timetable-squ">
       <AnimatedRoutes />
     </BrowserRouter>
   );
