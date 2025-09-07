@@ -21,7 +21,6 @@ import PageTransition from "@/src/components/layout/PageTransition";
 import WeeklySchedule from "@/src/components/WeeklySchedule";
 import MyCustomSpinner from "@/src/components/MyCustomSpinner";
 import { MaterialReactTable, type MRT_ColumnDef } from "material-react-table";
-
 import { useSemesters, useScheduleRows } from "@/src/lib/queries";
 import { useFilterStore } from "@/src/stores/filterStore";
 import type { SheetRow } from "@/src/lib/googleSheet";
@@ -33,7 +32,7 @@ import {
 } from "@/src/stores/commonSlotStore";
 import CommonSlotHelpDialog from "./CommonSlotHelpDialog";
 
-/* helpers */
+/* ---------- Time helpers ---------- */
 const toMinutes = (t: string) => {
   const [h, m] = t.split(":").map(Number);
   if (Number.isNaN(h) || Number.isNaN(m)) return NaN;
@@ -54,6 +53,7 @@ const overlaps = (
   return rs < se && re > ss;
 };
 
+/* ---------- Day normalization ---------- */
 const DAY_ORDER: Record<string, number> = {
   sun: 0,
   sunday: 0,
@@ -74,16 +74,7 @@ const DAY_ORDER: Record<string, number> = {
   sat: 6,
   saturday: 6,
 };
-
-const DAY_CANON: Record<number, string> = {
-  0: "Sun",
-  1: "Mon",
-  2: "Tue",
-  3: "Wed",
-  4: "Thu",
-  5: "Fri",
-  6: "Sat",
-};
+const DAY_CANON = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
 
 function canonicalDay(raw: unknown): string | null {
   if (typeof raw !== "string") return null;
@@ -92,8 +83,20 @@ function canonicalDay(raw: unknown): string | null {
   return ord === undefined ? null : DAY_CANON[ord];
 }
 
+// Supports "Mon/Wed", "Mon,Wed", "Mon & Wed"
+function extractCanonicalDays(raw: unknown): string[] {
+  if (typeof raw !== "string") return [];
+  const parts = raw.split(/[^A-Za-z]+/).filter(Boolean);
+  const uniq: string[] = [];
+  for (const p of parts) {
+    const c = canonicalDay(p);
+    if (c && !uniq.includes(c)) uniq.push(c);
+  }
+  return uniq;
+}
+
+/* ---------- Component ---------- */
 export default function CommonSlot() {
-  // semester + data
   const { data: semInfo } = useSemesters();
   const storeSemester = useFilterStore((s) => s.semester);
   const semester = storeSemester || semInfo?.active || "";
@@ -114,14 +117,17 @@ export default function CommonSlot() {
     setView,
     reset,
   } = useCommonSlotStore();
+
   const [helpOpen, setHelpOpen] = useState(false);
 
-  /* derived lists */
+  // All selectable days (canonical)
   const allDays = useMemo(
     () =>
       Array.from(
         new Set(
-          rows.map((r) => canonicalDay(r.day)).filter((d): d is string => !!d)
+          rows
+            .flatMap((r) => extractCanonicalDays(r.day))
+            .filter((d): d is string => !!d)
         )
       ).sort((a, b) => DAY_ORDER[a.toLowerCase()] - DAY_ORDER[b.toLowerCase()]),
     [rows]
@@ -144,8 +150,10 @@ export default function CommonSlot() {
       const rs = String(r.start_time || "").slice(0, 5);
       const re = String(r.end_time || "").slice(0, 5);
       if (!overlaps(rs, re, start, end)) return false;
-      const d = String(r.day || "").trim();
-      if (days.length && !days.includes(d)) return false;
+
+      const rowDays = extractCanonicalDays(r.day);
+      if (days.length && !rowDays.some((d) => days.includes(d))) return false;
+
       if (mode === "hall" && hall && String(r.hall || "").trim() !== hall)
         return false;
       return true;
