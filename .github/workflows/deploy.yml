@@ -1,5 +1,4 @@
 name: Build and Deploy to GitHub Pages
-
 on:
   push:
     branches: ["main"]
@@ -7,11 +6,8 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-
-    # 🔑 This is the change you need to make
     permissions:
       contents: write
-
     steps:
       - name: Checkout 🛎️
         uses: actions/checkout@v4
@@ -23,7 +19,7 @@ jobs:
           cache: "npm"
 
       - name: Install Dependencies
-        run: npm install
+        run: npm ci
 
       - name: Build Project
         run: npm run build
@@ -32,8 +28,15 @@ jobs:
           VITE_GOOGLE_SHEET2: ${{ secrets.VITE_GOOGLE_SHEET2 }}
           VITE_GOOGLE_SHEET3: ${{ secrets.VITE_GOOGLE_SHEET3 }}
 
+      # SPA routing fix + avoid Jekyll processing
+      - run: |
+          cp dist/index.html dist/404.html
+          touch dist/.nojekyll
+
       - name: Deploy to GitHub Pages 🚀
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
           publish_dir: ./dist
+          enable_jekyll: false
