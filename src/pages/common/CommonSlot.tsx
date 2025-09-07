@@ -15,7 +15,6 @@ import {
   Tooltip,
 } from "@mui/material";
 import RefreshIcon from "@mui/icons-material/Refresh";
-import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 
 import PageTransition from "@/src/components/layout/PageTransition";
 import WeeklySchedule from "@/src/components/WeeklySchedule";
@@ -182,14 +181,46 @@ export default function CommonSlot() {
             </Typography>
           )}
           <Tooltip title="Explain filters" arrow>
-            <IconButton
-              size="small"
-              color="primary"
+            <Box
+              role="button"
+              tabIndex={0}
               aria-label="open help"
               onClick={() => setHelpOpen(true)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setHelpOpen(true);
+                }
+              }}
+              sx={{
+                ml: 0.5,
+                cursor: "pointer",
+                userSelect: "none",
+                bgcolor: "primary.main",
+                color: "primary.contrastText",
+                borderRadius: "10px",
+                px: 1,
+                py: 0.25,
+                fontSize: 10,
+                lineHeight: 1,
+                fontWeight: 600,
+                letterSpacing: 0.5,
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                textTransform: "uppercase",
+                boxShadow: (t) => `0 0 0 1px ${t.palette.primary.dark} inset`,
+                "&:hover": {
+                  bgcolor: "primary.dark",
+                },
+                "&:focus-visible": {
+                  outline: (t) => `2px solid ${t.palette.primary.light}`,
+                  outlineOffset: 2,
+                },
+              }}
             >
-              <InfoOutlinedIcon fontSize="small" />
-            </IconButton>
+              HELP
+            </Box>
           </Tooltip>
         </Typography>
 
