@@ -24,6 +24,7 @@ const navItems = [
   { label: "Faculty", path: "/faculty" },
   { label: "Department", path: "/department" },
   { label: "College", path: "/college" },
+  { label: "Common Slot", path: "/common-slot" },
 ];
 
 const AppHeader = () => {
