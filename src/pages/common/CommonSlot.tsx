@@ -29,6 +29,7 @@ import {
   useCommonSlotStore,
   type CommonSlotMode,
   type CommonSlotView,
+  type TimeFilterMode,
 } from "@/src/stores/commonSlotStore";
 import CommonSlotHelpDialog from "./CommonSlotHelpDialog";
 
@@ -39,19 +40,11 @@ const toMinutes = (t: string) => {
   return h * 60 + m;
 };
 
-const overlaps = (
-  rowStart: string,
-  rowEnd: string,
-  selStart: string,
-  selEnd: string
-) => {
-  const rs = toMinutes(rowStart);
-  const re = toMinutes(rowEnd);
-  const ss = toMinutes(selStart);
-  const se = toMinutes(selEnd);
-  if ([rs, re, ss, se].some(Number.isNaN)) return false;
-  return rs < se && re > ss;
-};
+const overlapsInterval = (rs: number, re: number, ss: number, se: number) =>
+  rs < se && re > ss;
+
+const withinInterval = (rs: number, re: number, ss: number, se: number) =>
+  rs >= ss && re <= se;
 
 /* ---------- Day normalization ---------- */
 const DAY_ORDER: Record<string, number> = {
@@ -109,12 +102,14 @@ export default function CommonSlot() {
     days,
     hall,
     view,
+    timeMode,
     setMode,
     setStart,
     setEnd,
     setDays,
     setHall,
     setView,
+    setTimeMode,
     reset,
   } = useCommonSlotStore();
 
@@ -145,11 +140,19 @@ export default function CommonSlot() {
 
   const filtered = useMemo(() => {
     if (!rows.length) return [];
-    if (toMinutes(start) >= toMinutes(end)) return [];
+    const ss = toMinutes(start);
+    const se = toMinutes(end);
+    if (ss >= se) return [];
     return rows.filter((r) => {
-      const rs = String(r.start_time || "").slice(0, 5);
-      const re = String(r.end_time || "").slice(0, 5);
-      if (!overlaps(rs, re, start, end)) return false;
+      const rs = toMinutes(String(r.start_time || "").slice(0, 5));
+      const re = toMinutes(String(r.end_time || "").slice(0, 5));
+      if ([rs, re].some(Number.isNaN)) return false;
+
+      const timeOk =
+        timeMode === "overlap"
+          ? overlapsInterval(rs, re, ss, se)
+          : withinInterval(rs, re, ss, se);
+      if (!timeOk) return false;
 
       const rowDays = extractCanonicalDays(r.day);
       if (days.length && !rowDays.some((d) => days.includes(d))) return false;
@@ -158,7 +161,7 @@ export default function CommonSlot() {
         return false;
       return true;
     });
-  }, [rows, start, end, days, hall, mode]);
+  }, [rows, start, end, days, hall, mode, timeMode]);
 
   if (isLoading) return <MyCustomSpinner />;
 
@@ -220,6 +223,17 @@ export default function CommonSlot() {
             >
               <ToggleButton value="schedule">Schedule</ToggleButton>
               <ToggleButton value="table">Table</ToggleButton>
+            </ToggleButtonGroup>
+
+            <ToggleButtonGroup
+              size="small"
+              color="primary"
+              value={timeMode}
+              exclusive
+              onChange={(_, v: TimeFilterMode | null) => v && setTimeMode(v)}
+            >
+              <ToggleButton value="overlap">Overlap</ToggleButton>
+              <ToggleButton value="within">Within</ToggleButton>
             </ToggleButtonGroup>
 
             <Tooltip title="Reset">

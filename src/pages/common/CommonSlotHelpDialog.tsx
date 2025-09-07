@@ -43,9 +43,22 @@ export default function CommonSlotHelpDialog({
         <Typography variant="subtitle2" gutterBottom>
           Time Range
         </Typography>
-        <Typography variant="body2" component="p">
-          A section is included if: sectionStart &lt; selectedEnd AND sectionEnd
-          &gt; selectedStart. End must be after Start.
+        <Typography variant="body2" paragraph>
+          Select Start and End to define a time window.
+        </Typography>
+
+        <Typography variant="subtitle2" gutterBottom>
+          Time Match Mode
+        </Typography>
+        <Typography variant="body2" paragraph>
+          <strong>Overlap:</strong> A section is included if it intersects the
+          window (sectionStart &lt; selectedEnd AND sectionEnd &gt;
+          selectedStart).
+        </Typography>
+        <Typography variant="body2" paragraph>
+          <strong>Within:</strong> A section is included only if it is fully
+          contained inside the window (sectionStart ≥ selectedStart AND
+          sectionEnd ≤ selectedEnd).
         </Typography>
 
         <Typography variant="subtitle2" gutterBottom>
