@@ -11,7 +11,7 @@ const COLUMN_ORDER: { key: keyof SheetRow; title: string }[] = [
   { key: "credit_hours", title: "Credit hours" },
   { key: "students_in_section", title: "Enrolled" },
   { key: "max_students", title: "Max Number Of Students" },
-  { key: "instructor_code", title: "Instructor code" },
+  // { key: "instructor_code", title: "Instructor code" },
   { key: "instructor", title: "Instructor" },
   { key: "day", title: "Day" },
   { key: "start_time", title: "Time start" },
