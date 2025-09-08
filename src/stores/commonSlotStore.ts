@@ -11,14 +11,17 @@ interface CommonSlotState {
   days: string[];
   hall: string | null;
   view: CommonSlotView;
-  timeMode: TimeFilterMode; // NEW
+  timeMode: TimeFilterMode;
+  minCapacity: number; // NEW: minimum hall capacity filter
+
   setMode: (m: CommonSlotMode) => void;
   setStart: (v: string) => void;
   setEnd: (v: string) => void;
   setDays: (d: string[]) => void;
   setHall: (h: string | null) => void;
   setView: (v: CommonSlotView) => void;
-  setTimeMode: (m: TimeFilterMode) => void; // NEW
+  setTimeMode: (m: TimeFilterMode) => void;
+  setMinCapacity: (n: number) => void; // NEW
   reset: () => void;
 }
 
@@ -31,6 +34,7 @@ const INITIAL: Omit<
   | "setHall"
   | "setView"
   | "setTimeMode"
+  | "setMinCapacity"
   | "reset"
 > = {
   mode: "slot",
@@ -39,7 +43,8 @@ const INITIAL: Omit<
   days: [],
   hall: null,
   view: "schedule",
-  timeMode: "within", // changed default from "overlap" to "within"
+  timeMode: "within",
+  minCapacity: 0, // NEW default
 };
 
 export const useCommonSlotStore = create<CommonSlotState>((set) => ({
@@ -51,5 +56,6 @@ export const useCommonSlotStore = create<CommonSlotState>((set) => ({
   setHall: (hall) => set({ hall }),
   setView: (view) => set({ view }),
   setTimeMode: (timeMode) => set({ timeMode }),
+  setMinCapacity: (minCapacity) => set({ minCapacity }), // NEW
   reset: () => set({ ...INITIAL }),
 }));

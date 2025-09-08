@@ -13,6 +13,8 @@ import {
   Divider,
   IconButton,
   Tooltip,
+  Collapse, // NEW
+  InputAdornment, // NEW
 } from "@mui/material";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
@@ -104,6 +106,10 @@ export default function CommonSlot() {
     hall,
     view,
     timeMode,
+    // NEW:
+    minCapacity,
+    setMinCapacity,
+    // setters
     setMode,
     setStart,
     setEnd,
@@ -115,6 +121,7 @@ export default function CommonSlot() {
   } = useCommonSlotStore();
 
   const [helpOpen, setHelpOpen] = useState(false);
+  const [capInfoOpen, setCapInfoOpen] = useState(false); // NEW
 
   // All selectable days (canonical)
   const allDays = useMemo(
@@ -158,11 +165,18 @@ export default function CommonSlot() {
       const rowDays = extractCanonicalDays(r.day);
       if (days.length && !rowDays.some((d) => days.includes(d))) return false;
 
+      // NEW: hall capacity filter (>= minCapacity)
+      const capRaw = String(r.room_capacity ?? "").trim();
+      const capNum = Math.floor(Number(capRaw));
+      const capacity = Number.isFinite(capNum) ? capNum : 0;
+      if (capacity < minCapacity) return false;
+
       if (mode === "hall" && hall && String(r.hall || "").trim() !== hall)
         return false;
+
       return true;
     });
-  }, [rows, start, end, days, hall, mode, timeMode]);
+  }, [rows, start, end, days, hall, mode, timeMode, minCapacity]);
 
   if (isLoading) return <MyCustomSpinner />;
 
@@ -300,7 +314,7 @@ export default function CommonSlot() {
               value={start}
               onChange={(e) => setStart(e.target.value)}
               size="small"
-              inputProps={{ step: 300 }}
+              slotProps={{ htmlInput: { step: 300 } }}
             />
             <TextField
               label="End"
@@ -308,7 +322,7 @@ export default function CommonSlot() {
               value={end}
               onChange={(e) => setEnd(e.target.value)}
               size="small"
-              inputProps={{ step: 300 }}
+              slotProps={{ htmlInput: { step: 300 } }}
               error={toMinutes(start) >= toMinutes(end)}
               helperText={
                 toMinutes(start) >= toMinutes(end)
@@ -336,6 +350,55 @@ export default function CommonSlot() {
               renderInput={(params) => <TextField {...params} label="Days" />}
               sx={{ minWidth: 220 }}
             />
+
+            {/* Min Capacity numeric filter with info toggle */}
+            <Box sx={{ width: 150 }}>
+              <TextField
+                fullWidth
+                label="Min Capacity"
+                type="number"
+                value={minCapacity}
+                onChange={(e) => {
+                  const n = Math.floor(Number(e.target.value ?? 0));
+                  setMinCapacity(Number.isFinite(n) && n > 0 ? n : 0);
+                }}
+                size="small"
+                slotProps={{
+                  htmlInput: {
+                    min: 0,
+                    step: 1,
+                    inputMode: "numeric",
+                    pattern: "[0-9]*",
+                  },
+                }}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        size="small"
+                        aria-label="About capacity filter"
+                        aria-expanded={capInfoOpen}
+                        aria-controls="capacity-help"
+                        onClick={() => setCapInfoOpen((v) => !v)}
+                        edge="end"
+                      >
+                        <InfoOutlinedIcon fontSize="small" />
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+              <Collapse in={capInfoOpen} unmountOnExit>
+                <Typography
+                  id="capacity-help"
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{ display: "block", mt: 0.5 }}
+                >
+                  Rooms with capacity ≥ value
+                </Typography>
+              </Collapse>
+            </Box>
 
             {mode === "hall" && (
               <Autocomplete
