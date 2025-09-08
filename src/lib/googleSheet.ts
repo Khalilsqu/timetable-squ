@@ -68,6 +68,9 @@ const KEY_MAP: Record<string, string> = {
   UE: "university_elective",
   UR: "university_requirement",
   Semester: "semester",
+  "Section type": "section_type",
+  "Course Language": "course_language",
+  Level: "level",
   // support older/lower‑case names as fallbacks
   College: "college",
   Department: "department",
