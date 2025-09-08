@@ -146,10 +146,13 @@ const AppHeader = () => {
           backdropFilter: "blur(8px)",
           backgroundColor: (t) =>
             visible
-              ? t.palette.mode === "dark"
-                ? "rgba(18,18,18,0.85)"
-                : "rgba(255,255,255,0.80)"
+              ? alpha(
+                  t.palette.background.paper,
+                  t.palette.mode === "dark" ? 0.88 : 0.92
+                )
               : "transparent",
+          borderBottom: (t) =>
+            visible ? `1px solid ${alpha(t.palette.divider, 0.5)}` : "none",
           boxShadow: elevated
             ? (t) =>
                 `0 2px 6px -2px ${

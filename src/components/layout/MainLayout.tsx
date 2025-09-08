@@ -36,6 +36,10 @@ const MainLayout = () => {
           sx={{
             // responsive padding (was p={3})
             p: { xs: 1.5, sm: 2, md: 3 },
+            bgcolor: (t) =>
+              t.palette.mode === "light"
+                ? t.palette.grey[50] // slightly off-white to contrast header
+                : t.palette.background.default, // deep canvas in dark mode
           }}
         >
           {/* Removed extra pt; AppHeader already inserts a spacer div */}
