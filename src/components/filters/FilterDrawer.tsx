@@ -48,6 +48,7 @@ interface CourseOpt {
   name: string;
   college: string;
   department: string;
+  credit_hours?: number;
 }
 
 const collectOptions = (rows: SheetRow[]) => {
@@ -88,6 +89,10 @@ const collectOptions = (rows: SheetRow[]) => {
         name: String(r.course_name),
         college: String(r.college),
         department: String(r.department),
+        credit_hours:
+          r.credit_hours !== undefined && r.credit_hours !== null
+            ? Number(r.credit_hours)
+            : undefined,
       };
     }
   });
@@ -114,6 +119,17 @@ interface DrawerProps {
 }
 
 const FilterDrawer = ({ open, onClose }: DrawerProps) => {
+  // (removed duplicate declaration)
+  const handleCollegeChange = (_: React.SyntheticEvent, v: CollegeOpt[]) => {
+    setColleges(v.map((x) => x.id));
+  };
+
+  const handleDepartmentChange = (
+    _: React.SyntheticEvent,
+    v: DepartmentOpt[]
+  ) => {
+    setDepartments(v.map((x) => x.id));
+  };
   const [, setSearchParams] = useSearchParams();
 
   /* layout */
@@ -128,6 +144,8 @@ const FilterDrawer = ({ open, onClose }: DrawerProps) => {
     courses,
     university_elective,
     university_requirement,
+    credit_hours_min,
+    credit_hours_max,
     filteredNumber,
     isFiltering,
 
@@ -138,6 +156,8 @@ const FilterDrawer = ({ open, onClose }: DrawerProps) => {
     setCourses,
     setElective,
     setRequirement,
+    setCreditHoursMin,
+    setCreditHoursMax,
     reset,
   } = useFilterStore();
 
@@ -168,6 +188,16 @@ const FilterDrawer = ({ open, onClose }: DrawerProps) => {
     () => collectOptions(scheduleRows),
     [scheduleRows]
   );
+  // Infer max credit hours from courseList
+  const inferredMaxCredit = useMemo(() => {
+    if (!courseList.length) return 30;
+    return Math.max(...courseList.map((c) => c.credit_hours ?? 0));
+  }, [courseList]);
+
+  // Set default max credit hours to inferred value when courseList changes
+  useEffect(() => {
+    setCreditHoursMax(inferredMaxCredit);
+  }, [inferredMaxCredit, setCreditHoursMax]);
 
   /* dependent options */
   const deptOptions = useMemo(
@@ -183,9 +213,11 @@ const FilterDrawer = ({ open, onClose }: DrawerProps) => {
       courseList.filter((c) => {
         const okCol = !colleges.length || colleges.includes(c.college);
         const okDep = !departments.length || departments.includes(c.department);
-        return okCol && okDep;
+        const ch = c.credit_hours ?? 0;
+        const okCredit = ch >= credit_hours_min && ch <= credit_hours_max;
+        return okCol && okDep && okCredit;
       }),
-    [courseList, colleges, departments]
+    [courseList, colleges, departments, credit_hours_min, credit_hours_max]
   );
 
   /* prune dangling selections whenever parents change */
@@ -209,30 +241,38 @@ const FilterDrawer = ({ open, onClose }: DrawerProps) => {
     setCourses,
   ]);
 
-  const handleCollegeChange = (_: React.SyntheticEvent, v: CollegeOpt[]) => {
-    setColleges(v.map((x) => x.id));
-  };
-
-  const handleDepartmentChange = (
-    _: React.SyntheticEvent,
-    v: DepartmentOpt[]
-  ) => {
-    setDepartments(v.map((x) => x.id));
-  };
-
-  const handleCourseChange = (_: React.SyntheticEvent, v: CourseOpt[]) => {
-    setCourses(v.map((x) => x.id));
-  };
-
-  const handleElectiveChange = (_: React.SyntheticEvent, v: string | null) => {
-    setElective(v === "yes");
-  };
-
   const handleRequirementChange = (
     _: React.SyntheticEvent,
     v: string | null
   ) => {
     setRequirement(v === "yes");
+  };
+
+  // Removed unused handleCreditHoursChange
+
+  const handleCreditHoursMinChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const value = Number(e.target.value);
+    const min = Number.isNaN(value) ? 0 : Math.max(0, value);
+    setCreditHoursMin(min);
+    // Ensure max is always at least min + 1 and not above inferredMaxCredit
+    if (credit_hours_max <= min) {
+      setCreditHoursMax(Math.min(inferredMaxCredit, min + 1));
+    }
+  };
+  const handleCreditHoursMaxChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const value = Number(e.target.value);
+    let max = Number.isNaN(value)
+      ? inferredMaxCredit
+      : Math.min(inferredMaxCredit, value);
+    // Ensure max is always at least min + 1
+    if (max <= credit_hours_min) {
+      max = Math.min(inferredMaxCredit, credit_hours_min + 1);
+    }
+    setCreditHoursMax(max);
   };
 
   /* ---------------------------------------------------------------- */
@@ -305,7 +345,7 @@ const FilterDrawer = ({ open, onClose }: DrawerProps) => {
           options={courseOptions}
           getOptionLabel={(o) => `${o.code} — ${o.name}`}
           value={courseOptions.filter((c) => courses.includes(c.id))}
-          onChange={handleCourseChange}
+          onChange={(_event, v: CourseOpt[]) => setCourses(v.map((x) => x.id))}
           renderInput={(p) => <TextField {...p} label="Course" />}
         />
       </Box>
@@ -318,7 +358,9 @@ const FilterDrawer = ({ open, onClose }: DrawerProps) => {
         <RadioGroup
           row
           value={university_elective ? "yes" : "no"}
-          onChange={handleElectiveChange}
+          onChange={(_: React.SyntheticEvent, v: string | null) =>
+            setElective(v === "yes")
+          }
         >
           <FormControlLabel value="yes" control={<Radio />} label="Yes" />
           <FormControlLabel value="no" control={<Radio />} label="No" />
@@ -337,6 +379,29 @@ const FilterDrawer = ({ open, onClose }: DrawerProps) => {
           <FormControlLabel value="yes" control={<Radio />} label="Yes" />
           <FormControlLabel value="no" control={<Radio />} label="No" />
         </RadioGroup>
+      </Box>
+
+      {/* Credit Hours Range Filter */}
+      <Box p={2} display="flex" gap={2} alignItems="center">
+        <TextField
+          label="Min Credit Hours"
+          type="number"
+          slotProps={{ htmlInput: { min: 0, max: inferredMaxCredit, step: 1 } }}
+          value={credit_hours_min}
+          onChange={handleCreditHoursMinChange}
+          size="small"
+          sx={{ width: 120 }}
+        />
+        <Typography variant="body2">to</Typography>
+        <TextField
+          label="Max Credit Hours"
+          type="number"
+          slotProps={{ htmlInput: { min: 0, max: inferredMaxCredit, step: 1 } }}
+          value={credit_hours_max}
+          onChange={handleCreditHoursMaxChange}
+          size="small"
+          sx={{ width: 120 }}
+        />
       </Box>
 
       {/* footer */}

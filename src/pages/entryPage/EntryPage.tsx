@@ -65,6 +65,8 @@ export default function EntryPage() {
     courses,
     university_elective,
     university_requirement,
+    credit_hours_min,
+    credit_hours_max,
     setFilteredNumber,
     setIsFiltering,
   } = useFilterStore();
@@ -91,6 +93,9 @@ export default function EntryPage() {
           r.university_requirement !== university_requirement
         )
           return false;
+        // credit hours filter
+        const ch = Number(r.credit_hours ?? 0);
+        if (ch < credit_hours_min || ch > credit_hours_max) return false;
         return true;
       }),
     [
@@ -100,6 +105,8 @@ export default function EntryPage() {
       courses,
       university_elective,
       university_requirement,
+      credit_hours_min,
+      credit_hours_max,
     ]
   );
 
