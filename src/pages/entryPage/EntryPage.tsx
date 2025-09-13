@@ -24,11 +24,53 @@ import { Box, IconButton, Tooltip, Typography } from "@mui/material";
 import UnfoldLessOutlinedIcon from "@mui/icons-material/UnfoldLessOutlined";
 import UnfoldMoreOutlinedIcon from "@mui/icons-material/UnfoldMoreOutlined";
 
+import WeeklySchedule from "@/src/components/WeeklySchedule";
+import { useEntryPageViewStore } from "@/src/stores/entryPageViewStore";
 // import DownloadIcon from "@mui/icons-material/Download";
 // import { mkConfig, generateCsv, download } from "export-to-csv";
 /* ———————————————————————————————————————————
    Main viewer component
    ——————————————————————————————————————————— */
+
+const DAY_ORDER: Record<string, number> = {
+  sun: 0,
+  sunday: 0,
+  mon: 1,
+  monday: 1,
+  tue: 2,
+  tues: 2,
+  tuesday: 2,
+  wed: 3,
+  weds: 3,
+  wednesday: 3,
+  thu: 4,
+  thur: 4,
+  thurs: 4,
+  thursday: 4,
+  fri: 5,
+  friday: 5,
+  sat: 6,
+  saturday: 6,
+};
+const DAY_CANON = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
+const canonicalDay = (raw: unknown): string | null => {
+  if (typeof raw !== "string") return null;
+  const key = raw.trim().toLowerCase();
+  const ord = DAY_ORDER[key];
+  return ord === undefined ? null : DAY_CANON[ord];
+};
+const extractCanonicalDays = (raw: unknown): string[] => {
+  if (typeof raw !== "string") return [];
+  const parts = raw.split(/[^A-Za-z]+/).filter(Boolean);
+  const uniq: string[] = [];
+  for (const p of parts) {
+    const c = canonicalDay(p);
+    if (c && !uniq.includes(c)) uniq.push(c);
+  }
+  return uniq;
+};
+const isHHMM = (s: string) => /^\d{2}:\d{2}$/.test(s);
+
 export default function EntryPage() {
   const [isPending, startTransition] = useTransition();
   const { pagination, setPagination } = useFilterStore();
@@ -162,8 +204,37 @@ export default function EntryPage() {
   //   [semester]
   // );
 
-  /* 4. render */
-  return (
+  const { view } = useEntryPageViewStore();
+
+  // sanitize for WeeklySchedule to avoid null/invalid fields
+  const scheduleRows = useMemo(() => {
+    return filteredRows
+      .map((r) => {
+        const start = String(r.start_time ?? "").slice(0, 5);
+        const end = String(r.end_time ?? "").slice(0, 5);
+        const days = extractCanonicalDays(r.day);
+        const day = days[0] ?? null;
+        const hall = String(r.hall ?? "TBA").trim() || "TBA";
+        if (!day || !isHHMM(start) || !isHHMM(end)) return null;
+        return {
+          ...r,
+          day,
+          start_time: start,
+          end_time: end,
+          hall,
+        } as SheetRow;
+      })
+      .filter((x): x is SheetRow => x !== null);
+  }, [filteredRows]);
+
+  /* render */
+  return view === "schedule" ? (
+    <WeeklySchedule
+      data={scheduleRows} // use sanitized rows
+      semester={semester || undefined}
+      hideTooltip
+    />
+  ) : (
     <MaterialReactTable
       // virtualize rows and columns for performance on large datasets
       enableRowVirtualization

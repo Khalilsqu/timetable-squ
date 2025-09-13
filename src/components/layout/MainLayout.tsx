@@ -6,8 +6,8 @@ import AppHeader from "./AppHeader";
 import FilterFab from "@/src/components/filters/FilterFab";
 import GlobalErrorHandler from "@/src/components/GlobalErrorSnackbar";
 import SessionWelcome from "@/src/components/SessionWelcome";
-
 import ScrollTop from "./useScrollTrigger";
+import ViewToggleFab from "@/src/components/filters/ViewToggleFab";
 
 const MainLayout = () => {
   const isDark = useLayoutStore((s) => s.isDarkTheme);
@@ -34,17 +34,17 @@ const MainLayout = () => {
           flex={1}
           overflow="hidden"
           sx={{
-            // responsive padding (was p={3})
             p: { xs: 1.5, sm: 2, md: 3 },
             bgcolor: (t) =>
               t.palette.mode === "light"
-                ? t.palette.grey[50] // slightly off-white to contrast header
-                : t.palette.background.default, // deep canvas in dark mode
+                ? t.palette.grey[50]
+                : t.palette.background.default,
           }}
         >
-          {/* Removed extra pt; AppHeader already inserts a spacer div */}
+          {/* AppHeader already inserts a spacer; no extra pt needed */}
           <Outlet />
           <FilterFab />
+          <ViewToggleFab />
         </Box>
 
         <ScrollTop />
