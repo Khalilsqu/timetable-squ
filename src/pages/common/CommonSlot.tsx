@@ -18,6 +18,8 @@ import {
 } from "@mui/material";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import UnfoldLessOutlinedIcon from "@mui/icons-material/UnfoldLessOutlined";
+import UnfoldMoreOutlinedIcon from "@mui/icons-material/UnfoldMoreOutlined";
 
 import PageTransition from "@/src/components/layout/PageTransition";
 import WeeklySchedule from "@/src/components/WeeklySchedule";
@@ -122,6 +124,11 @@ export default function CommonSlot() {
 
   const [helpOpen, setHelpOpen] = useState(false);
   const [capInfoOpen, setCapInfoOpen] = useState(false); // NEW
+
+  // pagination state (same pattern as EntryPage)
+  const pagination = useFilterStore((s) => s.pagination);
+  const setPagination = useFilterStore((s) => s.setPagination);
+  const [showPagination, setShowPagination] = useState(false);
 
   // All selectable days (canonical)
   const allDays = useMemo(
@@ -449,13 +456,79 @@ export default function CommonSlot() {
               enableColumnVirtualization
               enableColumnResizing
               columnResizeMode="onChange"
-              initialState={{
-                density: "compact",
-                pagination: { pageIndex: 0, pageSize: 50 },
+              enablePagination={showPagination}
+              initialState={{ density: "compact" }}
+              rowCount={filtered.length}
+              state={{
+                pagination: {
+                  pageIndex: pagination.pageIndex,
+                  pageSize: pagination.pageSize,
+                },
+              }}
+              onPaginationChange={(updater) => {
+                const next =
+                  typeof updater === "function" ? updater(pagination) : updater;
+                setPagination(next);
               }}
               muiTableContainerProps={{
                 sx: { maxHeight: { xs: "60vh", md: "70vh" } },
               }}
+              muiPaginationProps={{
+                rowsPerPageOptions: [
+                  { label: "10", value: 10 },
+                  { label: "25", value: 25 },
+                  { label: "50", value: 50 },
+                  { label: "100", value: 100 },
+                  { label: "200", value: 200 },
+                ],
+              }}
+              muiTableHeadCellProps={{
+                sx: { whiteSpace: "normal", wordBreak: "break-word" },
+              }}
+              muiTableBodyCellProps={{
+                sx: { whiteSpace: "normal", wordBreak: "break-word" },
+              }}
+              renderBottomToolbarCustomActions={() => (
+                <Box
+                  sx={{
+                    flex: "1 1 auto",
+                    display: "flex",
+                    justifyContent: "flex-end",
+                    alignItems: "center",
+                    px: 2,
+                    gap: 1,
+                  }}
+                >
+                  {!showPagination && (
+                    <Typography variant="caption" color="text.secondary">
+                      {filtered.length} rows
+                    </Typography>
+                  )}
+                  <Tooltip
+                    title={
+                      showPagination ? "Hide Pagination" : "Show Pagination"
+                    }
+                    arrow
+                  >
+                    <IconButton
+                      size="small"
+                      color="primary"
+                      onClick={() => setShowPagination((p) => !p)}
+                      aria-label={
+                        showPagination
+                          ? "collapse pagination"
+                          : "expand pagination"
+                      }
+                    >
+                      {showPagination ? (
+                        <UnfoldLessOutlinedIcon />
+                      ) : (
+                        <UnfoldMoreOutlinedIcon />
+                      )}
+                    </IconButton>
+                  </Tooltip>
+                </Box>
+              )}
             />
           )}
         </Box>
