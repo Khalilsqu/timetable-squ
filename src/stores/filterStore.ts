@@ -1,5 +1,6 @@
 // src\stores\filterStore.ts
 import { create } from "zustand";
+
 export interface FilterState {
   colleges: string[];
   departments: string[];
@@ -9,31 +10,30 @@ export interface FilterState {
   semester: string;
   credit_hours_min: number;
   credit_hours_max: number;
-  setCreditHoursMin: (v: number) => void;
-  setCreditHoursMax: (v: number) => void;
-  pagination: {
-    pageIndex: number;
-    pageSize: number;
-  };
+  pagination: { pageIndex: number; pageSize: number };
+  level: string;
+  course_languages: string[];
 
-  /* actions */
   setColleges: (v: string[]) => void;
   setDepartments: (v: string[]) => void;
   setCourses: (v: string[]) => void;
-  setElective: (v: boolean | null) => void;
-  setRequirement: (v: boolean | null) => void;
-  setSemester: (v: string) => void; // NEW
+  setElective: (v: boolean) => void; // changed
+  setRequirement: (v: boolean) => void; // changed
+  setSemester: (v: string) => void;
+  setCreditHoursMin: (v: number) => void;
+  setCreditHoursMax: (v: number) => void;
   setPagination: (v: { pageIndex: number; pageSize: number }) => void;
+  setLevel: (v: string) => void;
+  setCourseLanguages: (v: string[]) => void;
 
-  /*  ► make these required  */
   filteredNumber: number;
   setFilteredNumber: (v: number) => void;
 
-  isFiltering: boolean; // optional, if you want to track filtering state
-  setIsFiltering: (v: boolean) => void; // optional, if you want to track filtering state
+  isFiltering: boolean;
+  setIsFiltering: (v: boolean) => void;
 
   reset: () => void;
-  softReset: () => void; // NEW (reset *except* semester)
+  softReset: () => void;
 }
 
 export const useFilterStore = create<FilterState>()((set) => ({
@@ -49,17 +49,25 @@ export const useFilterStore = create<FilterState>()((set) => ({
   credit_hours_max: 30,
   pagination: { pageIndex: 0, pageSize: 50 },
 
+  // NEW defaults
+  level: "",
+  course_languages: [],
+
   setColleges: (v) => set({ colleges: v }),
   setDepartments: (v) => set({ departments: v }),
   setCourses: (v) => set({ courses: v }),
-  setElective: (v) => set({ university_elective: v ?? false }),
-  setRequirement: (v) => set({ university_requirement: v ?? false }),
-  setIsFiltering: (v) => set({ isFiltering: v }), // NEW
+  setElective: (v: boolean) => set({ university_elective: v }), // changed
+  setRequirement: (v: boolean) => set({ university_requirement: v }), // changed
+  setIsFiltering: (v) => set({ isFiltering: v }),
   setFilteredNumber: (v) => set({ filteredNumber: v }),
   setSemester: (v) => set({ semester: v }),
-  setCreditHoursMin: (v) => set({ credit_hours_min: v }),
-  setCreditHoursMax: (v) => set({ credit_hours_max: v }),
+  setCreditHoursMin: (v: number) => set({ credit_hours_min: v }),
+  setCreditHoursMax: (v: number) => set({ credit_hours_max: v }),
   setPagination: (v) => set({ pagination: v }),
+
+  // NEW setters
+  setLevel: (v) => set({ level: v }),
+  setCourseLanguages: (v) => set({ course_languages: v }),
 
   softReset: () =>
     set((s) => ({
@@ -72,8 +80,11 @@ export const useFilterStore = create<FilterState>()((set) => ({
       credit_hours_min: 0,
       credit_hours_max: 30,
       filteredNumber: 0,
-      isFiltering: false, // reset filtering state
-      pagination: { pageIndex: 0, pageSize: 50 }, // reset pagination
+      isFiltering: false,
+      pagination: { pageIndex: 0, pageSize: 50 },
+      // NEW clear
+      level: "",
+      course_languages: [],
       // keep s.semester
     })),
 
@@ -87,7 +98,11 @@ export const useFilterStore = create<FilterState>()((set) => ({
       credit_hours_min: 0,
       credit_hours_max: 30,
       filteredNumber: 0,
-      isFiltering: false, // reset filtering state
+      isFiltering: false,
       pagination: { pageIndex: 0, pageSize: 50 },
+      semester: "",
+      // NEW clear
+      level: "",
+      course_languages: [],
     }),
 }));

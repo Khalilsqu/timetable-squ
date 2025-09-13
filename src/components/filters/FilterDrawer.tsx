@@ -16,6 +16,7 @@ import {
   Typography,
   useMediaQuery,
   useTheme,
+  Checkbox,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { useEffect, useMemo } from "react";
@@ -119,7 +120,6 @@ interface DrawerProps {
 }
 
 const FilterDrawer = ({ open, onClose }: DrawerProps) => {
-  // (removed duplicate declaration)
   const handleCollegeChange = (_: React.SyntheticEvent, v: CollegeOpt[]) => {
     setColleges(v.map((x) => x.id));
   };
@@ -148,6 +148,9 @@ const FilterDrawer = ({ open, onClose }: DrawerProps) => {
     credit_hours_max,
     filteredNumber,
     isFiltering,
+    // NEW store fields
+    level,
+    course_languages,
 
     setSemester,
     softReset,
@@ -159,6 +162,9 @@ const FilterDrawer = ({ open, onClose }: DrawerProps) => {
     setCreditHoursMin,
     setCreditHoursMax,
     reset,
+    // NEW setters
+    setLevel,
+    setCourseLanguages,
   } = useFilterStore();
 
   const { data: semInfo } = useQuery<SemesterInfo, Error>({
@@ -198,6 +204,31 @@ const FilterDrawer = ({ open, onClose }: DrawerProps) => {
   useEffect(() => {
     setCreditHoursMax(inferredMaxCredit);
   }, [inferredMaxCredit, setCreditHoursMax]);
+
+  // detect available languages from data
+  const languageOptions = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          scheduleRows
+            .map((r) =>
+              typeof r.course_language === "string"
+                ? r.course_language.trim()
+                : ""
+            )
+            .filter(Boolean)
+        )
+      ).sort((a, b) => a.localeCompare(b)),
+    [scheduleRows]
+  );
+
+  // prune invalid selected languages when options change
+  useEffect(() => {
+    if (!course_languages.length) return;
+    const valid = new Set(languageOptions);
+    const keep = course_languages.filter((l) => valid.has(l));
+    if (keep.length !== course_languages.length) setCourseLanguages(keep);
+  }, [course_languages, languageOptions, setCourseLanguages]);
 
   /* dependent options */
   const deptOptions = useMemo(
@@ -241,14 +272,6 @@ const FilterDrawer = ({ open, onClose }: DrawerProps) => {
     setCourses,
   ]);
 
-  const handleRequirementChange = (
-    _: React.SyntheticEvent,
-    v: string | null
-  ) => {
-    setRequirement(v === "yes");
-  };
-
-  // Removed unused handleCreditHoursChange
 
   const handleCreditHoursMinChange = (
     e: React.ChangeEvent<HTMLInputElement>
@@ -350,35 +373,60 @@ const FilterDrawer = ({ open, onClose }: DrawerProps) => {
         />
       </Box>
 
-      {/* Elective / Requirement */}
+      {/* Elective / Requirement (checkboxes) */}
+      <Box p={2}>
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={university_elective}
+              onChange={(e) => setElective(e.target.checked)}
+              size="small"
+            />
+          }
+          label="University Elective"
+        />
+      </Box>
+      <Box p={2} sx={{ pt: 0 }}>
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={university_requirement}
+              onChange={(e) => setRequirement(e.target.checked)}
+              size="small"
+            />
+          }
+          label="University Requirement"
+        />
+      </Box>
+
+      {/* Level (UG / PG) */}
       <Box p={2}>
         <Typography variant="subtitle2" mb={1}>
-          University Elective
+          Level
         </Typography>
         <RadioGroup
           row
-          value={university_elective ? "yes" : "no"}
+          value={level || "any"}
           onChange={(_: React.SyntheticEvent, v: string | null) =>
-            setElective(v === "yes")
+            setLevel(v === "UG" || v === "PG" ? v : "")
           }
         >
-          <FormControlLabel value="yes" control={<Radio />} label="Yes" />
-          <FormControlLabel value="no" control={<Radio />} label="No" />
+          <FormControlLabel value="any" control={<Radio />} label="Any" />
+          <FormControlLabel value="UG" control={<Radio />} label="UG" />
+          <FormControlLabel value="PG" control={<Radio />} label="PG" />
         </RadioGroup>
       </Box>
 
+      {/* Language (inferred from data) */}
       <Box p={2}>
-        <Typography variant="subtitle2" mb={1}>
-          University Requirement
-        </Typography>
-        <RadioGroup
-          row
-          value={university_requirement ? "yes" : "no"}
-          onChange={handleRequirementChange}
-        >
-          <FormControlLabel value="yes" control={<Radio />} label="Yes" />
-          <FormControlLabel value="no" control={<Radio />} label="No" />
-        </RadioGroup>
+        <Autocomplete
+          multiple
+          size="small"
+          options={languageOptions}
+          value={course_languages}
+          onChange={(_, v) => setCourseLanguages(v)}
+          renderInput={(p) => <TextField {...p} label="Language" />}
+        />
       </Box>
 
       {/* Credit Hours Range Filter */}

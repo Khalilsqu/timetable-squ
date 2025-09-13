@@ -69,9 +69,21 @@ export default function EntryPage() {
     credit_hours_max,
     setFilteredNumber,
     setIsFiltering,
+    level,
+    course_languages,
   } = useFilterStore();
 
   useEffect(() => setIsFiltering(isPending), [isPending, setIsFiltering]);
+
+  const isYes = (v: unknown) => {
+    if (typeof v === "boolean") return v;
+    if (typeof v === "number") return v !== 0;
+    if (typeof v === "string") {
+      const s = v.trim().toLowerCase();
+      return s === "yes" || s === "y" || s === "true" || s === "1";
+    }
+    return false;
+  };
 
   // filter rows based on store selections
   const filteredRows = useMemo(
@@ -83,19 +95,33 @@ export default function EntryPage() {
           return false;
         if (courses.length && !courses.includes(String(r.course_code)))
           return false;
-        if (
-          university_elective !== null &&
-          r.university_elective !== university_elective
-        )
+
+        // Apply checkbox semantics:
+        // if checked → include only rows marked yes; if unchecked → don't filter by it.
+        if (university_elective && !isYes(r.university_elective)) return false;
+        if (university_requirement && !isYes(r.university_requirement))
           return false;
-        if (
-          university_requirement !== null &&
-          r.university_requirement !== university_requirement
-        )
-          return false;
-        // credit hours filter
+
+        // Level
+        if (level) {
+          const rowLevel = String(r.level ?? "")
+            .trim()
+            .toUpperCase();
+          if (rowLevel !== level.toUpperCase()) return false;
+        }
+
+        // Language
+        if (course_languages.length) {
+          const lang = String(r.course_language ?? "").trim();
+          if (!course_languages.includes(lang)) return false;
+        }
+
+        // Credit hours
         const ch = Number(r.credit_hours ?? 0);
-        if (ch < credit_hours_min || ch > credit_hours_max) return false;
+        if (Number.isFinite(ch)) {
+          if (ch < credit_hours_min || ch > credit_hours_max) return false;
+        }
+
         return true;
       }),
     [
@@ -107,6 +133,8 @@ export default function EntryPage() {
       university_requirement,
       credit_hours_min,
       credit_hours_max,
+      level,
+      course_languages,
     ]
   );
 
