@@ -32,6 +32,18 @@ import { useEntryPageViewStore } from "@/src/stores/entryPageViewStore";
    Main viewer component
    ——————————————————————————————————————————— */
 
+// Day types
+const DAY_DISPLAY_ORDER = [
+  "Sun",
+  "Mon",
+  "Tue",
+  "Wed",
+  "Thu",
+  "Fri",
+  "Sat",
+] as const;
+type DayCanon = (typeof DAY_DISPLAY_ORDER)[number];
+
 const DAY_ORDER: Record<string, number> = {
   sun: 0,
   sunday: 0,
@@ -52,24 +64,37 @@ const DAY_ORDER: Record<string, number> = {
   sat: 6,
   saturday: 6,
 };
-const DAY_CANON = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
-const canonicalDay = (raw: unknown): string | null => {
+// return typed day
+const canonicalDay = (raw: unknown): DayCanon | null => {
   if (typeof raw !== "string") return null;
   const key = raw.trim().toLowerCase();
   const ord = DAY_ORDER[key];
-  return ord === undefined ? null : DAY_CANON[ord];
+  return ord === undefined ? null : DAY_DISPLAY_ORDER[ord];
 };
-const extractCanonicalDays = (raw: unknown): string[] => {
+
+const extractCanonicalDays = (raw: unknown): DayCanon[] => {
   if (typeof raw !== "string") return [];
   const parts = raw.split(/[^A-Za-z]+/).filter(Boolean);
-  const uniq: string[] = [];
+  const uniq: DayCanon[] = [];
   for (const p of parts) {
     const c = canonicalDay(p);
     if (c && !uniq.includes(c)) uniq.push(c);
   }
   return uniq;
 };
+
 const isHHMM = (s: string) => /^\d{2}:\d{2}$/.test(s);
+
+// Add an explicit day index helper so WeeklySchedule gets Sun→Thu order
+const dayIndex = (d: DayCanon) => DAY_DISPLAY_ORDER.indexOf(d);
+
+/* Typed schedule row used by WeeklySchedule */
+type ScheduleRow = SheetRow & {
+  day: DayCanon;
+  start_time: string; // "HH:MM"
+  end_time: string; // "HH:MM"
+  hall: string;
+};
 
 export default function EntryPage() {
   const [isPending, startTransition] = useTransition();
@@ -207,7 +232,7 @@ export default function EntryPage() {
   const { view } = useEntryPageViewStore();
 
   // sanitize for WeeklySchedule to avoid null/invalid fields
-  const scheduleRows = useMemo(() => {
+  const scheduleRows = useMemo<ScheduleRow[]>(() => {
     return filteredRows
       .map((r) => {
         const start = String(r.start_time ?? "").slice(0, 5);
@@ -222,15 +247,16 @@ export default function EntryPage() {
           start_time: start,
           end_time: end,
           hall,
-        } as SheetRow;
+        } as ScheduleRow;
       })
-      .filter((x): x is SheetRow => x !== null);
+      .filter((x): x is ScheduleRow => x !== null)
+      .sort((a, b) => dayIndex(a.day) - dayIndex(b.day));
   }, [filteredRows]);
 
   /* render */
   return view === "schedule" ? (
     <WeeklySchedule
-      data={scheduleRows} // use sanitized rows
+      data={scheduleRows}
       semester={semester || undefined}
       hideTooltip
     />
