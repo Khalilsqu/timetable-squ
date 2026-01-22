@@ -210,5 +210,31 @@ export async function fetchSheetData(): Promise<SheetData> {
     }
     return remapped;
   });
-  return { columns, rows };
+  /* 4. Deduplicate ------------------------------------------------------ */
+  const seen = new Set<string>();
+  const uniqueRows: SheetRow[] = [];
+
+  for (const row of rows) {
+    // create a composite key for uniqueness
+    // adjust fields as needed if more specificity is required
+    const key = [
+      String(row.course_code ?? "").trim(),
+      String(row.section ?? "").trim(),
+      String(row.day ?? "").trim(),
+      String(row.start_time ?? "").trim(),
+      String(row.end_time ?? "").trim(),
+      String(row.instructor ?? "").trim(),
+      String(row.hall ?? "").trim(),
+      String(row.semester ?? "").trim(),
+    ]
+      .map((s) => s.toLowerCase())
+      .join("|");
+
+    if (!seen.has(key)) {
+      seen.add(key);
+      uniqueRows.push(row);
+    }
+  }
+
+  return { columns, rows: uniqueRows };
 }

@@ -1,5 +1,11 @@
 // C:\Users\kalho\Desktop\github\squ_frontend2\src\components\layout\AppHeader.tsx
-import { Fragment, useState, useRef, useEffect } from "react";
+import {
+  Fragment,
+  useState,
+  useRef,
+  useEffect,
+} from "react";
+import { useSearchParams } from "react-router";
 import {
   AppBar,
   Toolbar,
@@ -10,14 +16,20 @@ import {
   List,
   ListItemButton,
   ListItemText,
+  Autocomplete,
+  TextField,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import LightModeIcon from "@mui/icons-material/LightMode";
 import DarkModeIcon from "@mui/icons-material/DarkMode";
 import HomeIcon from "@mui/icons-material/Home";
+import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import { Link as RouterLink, NavLink, useLocation } from "react-router";
 import { styled, alpha } from "@mui/material/styles";
 import { useLayoutStore } from "@/src/stores/layoutStore";
+import { useFilterStore } from "@/src/stores/filterStore";
+import { useSemesters } from "@/src/lib/queries";
+import FilterDrawer from "@/src/components/filters/FilterDrawer";
 
 const navItems = [
   { label: "Student", path: "/student" },
@@ -77,6 +89,20 @@ const AppHeader = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const isDark = useLayoutStore((s) => s.isDarkTheme);
   const setDark = useLayoutStore((s) => s.setIsDarkTheme);
+  const [, setSearchParams] = useSearchParams();
+  const [filterOpen, setFilterOpen] = useState(false);
+
+  // Semester Logic
+  const { data: semInfo } = useSemesters();
+  const { semester, setSemester, softReset } = useFilterStore();
+  const activeSem = semInfo?.active ?? null;
+
+  // Initialize semester if not set
+  useEffect(() => {
+    if (!semester && activeSem) setSemester(activeSem);
+  }, [semester, activeSem, setSemester]);
+
+  const semesterOptions = semInfo?.list ?? [];
 
   // ---- scroll hide / show state ----
   const [visible, setVisible] = useState(true);
@@ -185,12 +211,52 @@ const AppHeader = () => {
           </IconButton>
 
           {/* logo */}
-          <RouterLink
-            to={{ pathname: "/", search }}
-            style={{ color: "inherit" }}
-          >
-            <HomeIcon fontSize="large" />
-          </RouterLink>
+          {/* logo + semester selector */}
+          <Box display="flex" alignItems="center" gap={2}>
+            <RouterLink
+              to={{ pathname: "/", search }}
+              style={{ color: "inherit", display: "flex", alignItems: "center" }}
+            >
+              <HomeIcon fontSize="large" />
+            </RouterLink>
+
+            {/* Semester Filter */}
+            <Autocomplete
+              size="small"
+              options={semesterOptions}
+              value={semester ?? ""}
+              disableClearable
+              onChange={(_, v) => {
+                if (v && v !== semester) {
+                  setSemester(v);
+                  softReset();
+
+                  // Preserve other params if needed, or clear?
+                  // The previous drawer implementation cleared them: setSearchParams({})
+                  // Let's keep that behavior for consistency if switching semesters invalidates other filters
+                  setSearchParams({});
+                }
+              }}
+              renderInput={(p) => (
+                <TextField
+                  {...p}
+                  variant="outlined"
+                  placeholder="Semester"
+                  sx={{ width: 140 }}
+                  slotProps={{
+                    input: {
+                      ...p.InputProps,
+                      style: {
+                        fontSize: "0.875rem",
+                        paddingTop: 1,
+                        paddingBottom: 1,
+                      },
+                    },
+                  }}
+                />
+              )}
+            />
+          </Box>
 
           {/* desktop nav */}
           <Box
@@ -219,6 +285,11 @@ const AppHeader = () => {
             gap={1}
             sx={{ display: { xs: "none", md: "flex" } }}
           >
+            {location.pathname === "/" && (
+              <IconButton onClick={() => setFilterOpen(true)} color="inherit">
+                <FilterAltIcon />
+              </IconButton>
+            )}
             <LightModeIcon fontSize="small" />
             <Switch
               checked={isDark}
@@ -227,6 +298,17 @@ const AppHeader = () => {
             />
             <DarkModeIcon fontSize="small" />
           </Box>
+          
+          {/* mobile filter button (shown on right) */}
+          {location.pathname === "/" && (
+             <IconButton
+               onClick={() => setFilterOpen(true)}
+               color="inherit"
+               sx={{ display: { xs: "flex", md: "none" } }}
+             >
+               <FilterAltIcon />
+             </IconButton>
+           )}
 
           {/* mobile drawer */}
           <Drawer
@@ -278,6 +360,8 @@ const AppHeader = () => {
           </Drawer>
         </Toolbar>
       </AppBar>
+
+      <FilterDrawer open={filterOpen} onClose={() => setFilterOpen(false)} />
 
       {/* OFFSET: reserves vertical space so page content isn't hidden */}
       <Box

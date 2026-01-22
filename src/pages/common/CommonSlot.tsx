@@ -1,4 +1,4 @@
-import { useMemo, useState, useTransition, useEffect } from "react";
+import { useMemo, useState, useTransition, useEffect, useRef } from "react";
 import {
   Box,
   Typography,
@@ -94,7 +94,7 @@ function extractCanonicalDays(raw: unknown): string[] {
 
 /* ---------- Component ---------- */
 export default function CommonSlot() {
-  const { data: semInfo } = useSemesters();
+  const { data: semInfo, isLoading: semLoading } = useSemesters();
   const storeSemester = useFilterStore((s) => s.semester);
   const semester = storeSemester || semInfo?.active || "";
   const { data: rows = [], isLoading, isFetching } = useScheduleRows(semester);
@@ -125,6 +125,13 @@ export default function CommonSlot() {
   const [capInfoOpen, setCapInfoOpen] = useState(false); // NEW
   const [isPending, startTransition] = useTransition();
   const [isSwitching, setIsSwitching] = useState(false);
+  const [isMounting, setIsMounting] = useState(true);
+
+  useEffect(() => {
+    // Force a small delay to ensure common UI is painted
+    const timer = setTimeout(() => setIsMounting(false), 30);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleViewChange = (v: CommonSlotView) => {
     if (v === view) return;
@@ -139,9 +146,12 @@ export default function CommonSlot() {
     }, 60);
   };
 
+  const prevView = useRef(view);
   useEffect(() => {
-    // If view changed and we were switching, stop switching
-    if (isSwitching) setIsSwitching(false);
+    if (prevView.current !== view) {
+      if (isSwitching) setIsSwitching(false);
+      prevView.current = view;
+    }
   }, [view, isSwitching]);
 
   // pagination state (same pattern as EntryPage)
@@ -204,7 +214,20 @@ export default function CommonSlot() {
     });
   }, [rows, start, end, days, hall, mode, timeMode, minCapacity]);
 
-  if (isLoading) return <MyCustomSpinner />;
+  if (isLoading || semLoading || isMounting) {
+    return (
+      <Box
+        sx={{
+          minHeight: "80vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <MyCustomSpinner />
+      </Box>
+    );
+  }
 
   return (
     <PageTransition>

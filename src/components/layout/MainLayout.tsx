@@ -3,7 +3,6 @@ import { CssBaseline, ThemeProvider, createTheme, Box } from "@mui/material";
 import { Outlet } from "react-router";
 import { useLayoutStore } from "@/src/stores/layoutStore";
 import AppHeader from "./AppHeader";
-import FilterFab from "@/src/components/filters/FilterFab";
 import GlobalErrorHandler from "@/src/components/GlobalErrorSnackbar";
 import SessionWelcome from "@/src/components/SessionWelcome";
 import ScrollTop from "./useScrollTrigger";
@@ -56,7 +55,6 @@ const MainLayout = () => {
         >
           {/* AppHeader already inserts a spacer; no extra pt needed */}
           <Outlet />
-          <FilterFab />
           <ViewToggleFab />
         </Box>
 

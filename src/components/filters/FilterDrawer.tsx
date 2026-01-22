@@ -1,12 +1,11 @@
 /* src/components/FilterDrawer.tsx */
-import { useSearchParams } from "react-router";
+
 import {
   Autocomplete,
   Backdrop,
   Box,
   Button,
   CircularProgress,
-  Divider,
   Drawer,
   FormControlLabel,
   IconButton,
@@ -130,7 +129,7 @@ const FilterDrawer = ({ open, onClose }: DrawerProps) => {
   ) => {
     setDepartments(v.map((x) => x.id));
   };
-  const [, setSearchParams] = useSearchParams();
+
 
   /* layout */
   const theme = useTheme();
@@ -153,7 +152,7 @@ const FilterDrawer = ({ open, onClose }: DrawerProps) => {
     course_languages,
 
     setSemester,
-    softReset,
+
     setColleges,
     setDepartments,
     setCourses,
@@ -173,7 +172,6 @@ const FilterDrawer = ({ open, onClose }: DrawerProps) => {
     // optional: staleTime, retry, etc.
   });
 
-  const semesterOptions = semInfo?.list ?? [];
   const activeSem = semInfo?.active ?? null;
 
   useEffect(() => {
@@ -314,24 +312,6 @@ const FilterDrawer = ({ open, onClose }: DrawerProps) => {
         <IconButton size="small" onClick={onClose}>
           <CloseIcon />
         </IconButton>
-      </Box>
-      <Divider />
-
-      {/* Semester */}
-      <Box p={2}>
-        <Autocomplete
-          size="small"
-          options={semesterOptions}
-          value={semester ?? ""}
-          onChange={(_, v) => {
-            if (v && v !== semester) {
-              setSemester(v);
-              softReset();
-              setSearchParams({}); // clear search params
-            }
-          }}
-          renderInput={(p) => <TextField {...p} label="Semester" />}
-        />
       </Box>
 
       {/* College */}
