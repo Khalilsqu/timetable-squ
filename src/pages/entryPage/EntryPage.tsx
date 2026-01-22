@@ -303,10 +303,16 @@ export default function EntryPage() {
         ],
       }}
       muiTableHeadCellProps={{
-        sx: { whiteSpace: "normal", wordBreak: "break-word" },
+        sx: {
+          whiteSpace: "nowrap",
+          "& .Mui-TableHeadCell-Content-Text": {
+            overflow: "visible",
+            textOverflow: "unset",
+          },
+        },
       }}
       muiTableBodyCellProps={{
-        sx: { whiteSpace: "normal", wordBreak: "break-word" },
+        sx: { whiteSpace: "nowrap" },
       }}
       renderBottomToolbarCustomActions={() => (
         <Box

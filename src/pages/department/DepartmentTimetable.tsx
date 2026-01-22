@@ -6,9 +6,9 @@ import {
   Autocomplete,
   TextField,
   Typography,
-  Switch,
-  FormControlLabel,
   IconButton,
+  ToggleButton,
+  ToggleButtonGroup,
 } from "@mui/material";
 import TuneIcon from "@mui/icons-material/Tune";
 // CloseIcon now used inside DepartmentFilterDrawer
@@ -241,16 +241,18 @@ export default function DepartmentTimetable() {
             alignItems="center"
             justifyContent="space-between"
           >
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={showExams}
-                  onChange={() => setShowExams(!showExams)}
-                  color="primary"
-                />
-              }
-              label={showExams ? "Final Exam Schedule" : "Course Sessions"}
-            />
+            <ToggleButtonGroup
+              value={showExams ? "exams" : "sessions"}
+              exclusive
+              onChange={(_, next) => {
+                if (next !== null) setShowExams(next === "exams");
+              }}
+              size="small"
+              color="primary"
+            >
+              <ToggleButton value="sessions">Course Sessions</ToggleButton>
+              <ToggleButton value="exams">Final Exams</ToggleButton>
+            </ToggleButtonGroup>
             <IconButton
               aria-label="filters"
               onClick={openDrawer}

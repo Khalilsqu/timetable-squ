@@ -6,8 +6,8 @@ import {
   Autocomplete,
   TextField,
   Typography,
-  Switch,
-  FormControlLabel,
+  ToggleButton,
+  ToggleButtonGroup,
 } from "@mui/material";
 
 import FinalExamSchedule from "@/src/components/FinalExamSchedule";
@@ -106,16 +106,18 @@ export default function InstructorTimetable() {
         {/* toggle sessions vs exams */}
         {selectedInstructors.length > 0 && (
           <Box mb={2} className="no-print">
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={showExams}
-                  onChange={() => setShowExams(!showExams)}
-                  color="primary"
-                />
-              }
-              label={showExams ? "Final Exam Schedule" : "Course Sessions"}
-            />
+            <ToggleButtonGroup
+              value={showExams ? "exams" : "sessions"}
+              exclusive
+              onChange={(_, next) => {
+                if (next !== null) setShowExams(next === "exams");
+              }}
+              size="small"
+              color="primary"
+            >
+              <ToggleButton value="sessions">Course Sessions</ToggleButton>
+              <ToggleButton value="exams">Final Exams</ToggleButton>
+            </ToggleButtonGroup>
           </Box>
         )}
 

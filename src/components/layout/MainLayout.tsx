@@ -23,7 +23,15 @@ const MainLayout = () => {
         display="flex"
         flexDirection="column"
         minHeight="100vh"
-        overflow="hidden"
+        sx={{
+          overflow: "hidden",
+          "@media print": {
+            display: "block",
+            overflow: "visible !important",
+            height: "auto",
+            minHeight: "auto",
+          },
+        }}
       >
         <AppHeader />
         <SessionWelcome />
@@ -32,13 +40,18 @@ const MainLayout = () => {
         <Box
           component="main"
           flex={1}
-          overflow="hidden"
           sx={{
+            overflow: "hidden",
             p: { xs: 1.5, sm: 2, md: 3 },
             bgcolor: (t) =>
               t.palette.mode === "light"
                 ? t.palette.grey[50]
                 : t.palette.background.default,
+            "@media print": {
+              display: "block",
+              overflow: "visible !important",
+              p: 0,
+            },
           }}
         >
           {/* AppHeader already inserts a spacer; no extra pt needed */}

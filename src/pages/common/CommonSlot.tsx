@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useTransition, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -7,14 +7,13 @@ import {
   ToggleButton,
   Autocomplete,
   Chip,
-  FormControlLabel,
-  Switch,
   Paper,
   Divider,
   IconButton,
   Tooltip,
-  Collapse, // NEW
-  InputAdornment, // NEW
+  Collapse,
+  InputAdornment,
+  LinearProgress,
 } from "@mui/material";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
@@ -124,6 +123,26 @@ export default function CommonSlot() {
 
   const [helpOpen, setHelpOpen] = useState(false);
   const [capInfoOpen, setCapInfoOpen] = useState(false); // NEW
+  const [isPending, startTransition] = useTransition();
+  const [isSwitching, setIsSwitching] = useState(false);
+
+  const handleViewChange = (v: CommonSlotView) => {
+    if (v === view) return;
+    // 1. Immediate high-priority update to show loader
+    setIsSwitching(true);
+
+    // 2. Delay the heavy render to allow browser to paint the loader
+    setTimeout(() => {
+      startTransition(() => {
+        setView(v);
+      });
+    }, 60);
+  };
+
+  useEffect(() => {
+    // If view changed and we were switching, stop switching
+    if (isSwitching) setIsSwitching(false);
+  }, [view, isSwitching]);
 
   // pagination state (same pattern as EntryPage)
   const pagination = useFilterStore((s) => s.pagination);
@@ -282,7 +301,9 @@ export default function CommonSlot() {
               color="primary"
               value={view}
               exclusive
-              onChange={(_, v: CommonSlotView | null) => v && setView(v)}
+              onChange={(_, v: CommonSlotView | null) => {
+                if (v) handleViewChange(v);
+              }}
             >
               <ToggleButton value="schedule">Schedule</ToggleButton>
               <ToggleButton value="table">Table</ToggleButton>
@@ -419,28 +440,53 @@ export default function CommonSlot() {
             )}
           </Box>
 
-          <FormControlLabel
-            control={
-              <Switch
-                size="small"
-                checked={view === "table"}
-                onChange={() =>
-                  setView(view === "table" ? "schedule" : "table")
-                }
-              />
-            }
-            label={view === "table" ? "Table View" : "Schedule View"}
+          <ToggleButtonGroup
+            size="small"
+            color="primary"
+            value={view}
+            exclusive
+            onChange={(_, v: CommonSlotView | null) => {
+              if (v) handleViewChange(v);
+            }}
             sx={{ alignSelf: "flex-start", mt: -1 }}
-          />
+          >
+            <ToggleButton value="schedule">Schedule View</ToggleButton>
+            <ToggleButton value="table">Table View</ToggleButton>
+          </ToggleButtonGroup>
         </Paper>
 
-        <Box>
+        <Box sx={{ position: "relative", minHeight: 400 }}>
           <Typography variant="subtitle2" mb={1} color="text.secondary">
             {filtered.length} matching{" "}
             {filtered.length === 1 ? "section" : "sections"}
           </Typography>
 
-          {isFetching && <MyCustomSpinner />}
+          {(isPending || isSwitching || isFetching) && (
+            <Box
+              sx={{
+                position: "absolute",
+                inset: 0,
+                zIndex: 100,
+                display: "flex",
+                flexDirection: "column",
+                bgcolor: (t) =>
+                  t.palette.mode === "dark"
+                    ? "rgba(18, 18, 18, 0.7)"
+                    : "rgba(255, 255, 255, 0.7)",
+                backdropFilter: "blur(4px)",
+              }}
+            >
+              <LinearProgress color="primary" sx={{ height: 4 }} />
+              <Box
+                flex={1}
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+              >
+                <MyCustomSpinner />
+              </Box>
+            </Box>
+          )}
 
           {view === "schedule" ? (
             <WeeklySchedule

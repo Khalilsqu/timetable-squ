@@ -282,6 +282,7 @@ const AppHeader = () => {
       {/* OFFSET: reserves vertical space so page content isn't hidden */}
       <Box
         aria-hidden
+        className="no-print"
         sx={{
           height: "var(--app-header-height,56px)",
           flexShrink: 0,

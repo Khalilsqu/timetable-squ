@@ -3,6 +3,8 @@
 import { useMemo, useState } from "react";
 import {
   Box,
+  Chip,
+  Stack,
   Table,
   TableBody,
   TableCell,
@@ -40,6 +42,30 @@ interface WeeklyScheduleProps {
   hideTooltip?: boolean;
 }
 
+const DAYS_ORDER = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+
+const parseTimeToMinutes = (value: string): number | null => {
+  const match = value
+    .trim()
+    .match(/^(\d{1,2}):(\d{2})(?::\d{2})?(?:\s*([AP]M))?$/i);
+  if (!match) return null;
+  let hours = Number(match[1]);
+  const minutes = Number(match[2]);
+  const suffix = match[3]?.toUpperCase();
+  if (suffix === "PM" && hours < 12) hours += 12;
+  if (suffix === "AM" && hours === 12) hours = 0;
+  if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) return null;
+  return hours * 60 + minutes;
+};
+
+const parseTimeRange = (value: string) => {
+  const [start, end] = value.split("-").map((part) => part.trim());
+  const startMins = start ? (parseTimeToMinutes(start) ?? 99999) : 99999;
+  const endMins = end ? (parseTimeToMinutes(end) ?? startMins) : startMins;
+  const duration = endMins >= startMins ? endMins - startMins : 0;
+  return { startMins, duration };
+};
+
 /* ------------- Component ------------------- */
 export default function WeeklySchedule({
   data,
@@ -53,18 +79,27 @@ export default function WeeklySchedule({
 
   /* 1. derive days & time-slots --------------------------------------- */
   const daysOfWeek = useMemo(() => {
-    const order = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
-    const uniq = Array.from(new Set(data.map((d) => String(d.day ?? ""))));
-    return uniq.sort((a, b) => order.indexOf(a) - order.indexOf(b));
+    const uniq = Array.from(
+      new Set(data.map((d) => String(d.day ?? "").trim().toUpperCase()))
+    ).filter(Boolean);
+    return uniq.sort((a, b) => DAYS_ORDER.indexOf(a) - DAYS_ORDER.indexOf(b));
   }, [data]);
 
   const timeSlots = useMemo(() => {
     const uniq = Array.from(
       new Set(
-        data.map((d) => `${d.start_time as string}-${d.end_time as string}`)
+        data.map(
+          (d) =>
+            `${String(d.start_time ?? "").trim()}-${String(d.end_time ?? "").trim()}`
+        )
       )
-    );
-    return uniq.sort();
+    ).filter((ts) => ts !== "-");
+    return uniq.sort((a, b) => {
+      const tA = parseTimeRange(a);
+      const tB = parseTimeRange(b);
+      if (tA.startMins !== tB.startMins) return tA.startMins - tB.startMins;
+      return tA.duration - tB.duration;
+    });
   }, [data]);
 
   /* 2. build grid: day  ➜  time-slot  ➜  entries[] -------------------- */
@@ -76,8 +111,11 @@ export default function WeeklySchedule({
     });
 
     data.forEach((row) => {
-      const day = String(row.day);
-      const ts = `${row.start_time as string}-${row.end_time as string}`;
+      const day = String(row.day ?? "").trim().toUpperCase();
+      const ts = `${String(row.start_time ?? "").trim()}-${String(
+        row.end_time ?? ""
+      ).trim()}`;
+      if (!g[day] || !g[day][ts]) return;
       g[day][ts].push({
         courseCode: String(row.course_code ?? ""),
         section: String(row.section ?? ""),
@@ -98,7 +136,7 @@ export default function WeeklySchedule({
   const close = () => setAnchorEl(null);
 
   /* 4. static styles --------------------------------------------------- */
-  const headerBg = isDark ? theme.palette.grey[800] : theme.palette.grey[100];
+  const headerBg = isDark ? theme.palette.grey[900] : theme.palette.grey[100];
 
   /* 5. render ---------------------------------------------------------- */
   return (
@@ -128,10 +166,21 @@ export default function WeeklySchedule({
         component={Paper}
         sx={{
           overflowX: "auto",
+          maxHeight: "min(72vh, 720px)",
+          borderRadius: 2,
+          border: "1px solid",
+          borderColor: theme.palette.divider,
           "@media print": { overflowX: "visible" },
         }}
       >
-        <Table size="small" sx={{ minWidth: 800 }}>
+        <Table
+          size="small"
+          stickyHeader
+          sx={{
+            minWidth: 900,
+            "& .MuiTableCell-root": { borderColor: theme.palette.divider },
+          }}
+        >
           {/* header */}
           <TableHead>
             <TableRow>
@@ -141,6 +190,8 @@ export default function WeeklySchedule({
                   fontWeight: 600,
                   textAlign: "left",
                   minWidth: 100,
+                  borderRight: "1px solid",
+                  borderColor: theme.palette.divider,
                 }}
               >
                 Time
@@ -154,7 +205,7 @@ export default function WeeklySchedule({
                     textAlign: "center",
                     minWidth: 150,
                     borderRight:
-                      idx < daysOfWeek.length - 1 ? "1px dashed" : "none",
+                      idx < daysOfWeek.length - 1 ? "1px solid" : "none",
                     borderColor: theme.palette.divider,
                   }}
                 >
@@ -171,11 +222,11 @@ export default function WeeklySchedule({
                 {/* time-slot label */}
                 <TableCell
                   sx={{
-                    backgroundColor: isDark
-                      ? theme.palette.grey[800]
-                      : theme.palette.grey[100],
+                    backgroundColor: headerBg,
                     fontWeight: 500,
                     textAlign: "left",
+                    borderRight: "1px solid",
+                    borderColor: theme.palette.divider,
                   }}
                 >
                   {ts}
@@ -186,14 +237,12 @@ export default function WeeklySchedule({
                   <TableCell
                     key={day}
                     sx={{
-                      backgroundColor: isDark
-                        ? theme.palette.grey[900]
-                        : theme.palette.common.white,
+                      backgroundColor: theme.palette.background.paper,
                       verticalAlign: "top",
-                      p: 1,
-                      height: 120,
+                      p: 1.25,
+                      height: 110,
                       borderRight:
-                        idx < daysOfWeek.length - 1 ? "1px dashed" : "none",
+                        idx < daysOfWeek.length - 1 ? "1px solid" : "none",
                       borderColor: theme.palette.divider,
                     }}
                   >
@@ -203,33 +252,38 @@ export default function WeeklySchedule({
                         sx={{
                           mb: 1,
                           p: 1,
-                          bgcolor: theme.palette.primary.light,
-                          color: theme.palette.primary.contrastText,
-                          borderRadius: 1,
-                          textAlign: "center",
-                          fontSize: "0.875rem",
+                          borderRadius: 1.5,
+                          border: "1px solid",
+                          borderColor: theme.palette.divider,
+                          bgcolor: isDark
+                            ? theme.palette.grey[900]
+                            : theme.palette.common.white,
                         }}
                       >
-                        {/* course code + section row */}
-                        <Box
-                          sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                          }}
-                        >
-                          <Typography fontWeight={600} component="span">
-                            {e.courseCode} ({e.section})
-                          </Typography>
-
-                          {/* info icon for course name */}
-                          {!!e.courseName && !hideTooltip && (
+                        <Stack spacing={0.75}>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              gap: 0.5,
+                              flexWrap: "wrap",
+                            }}
+                          >
                             <Tooltip
                               className="no-print"
-                              title={e.courseName}
-                              disableHoverListener={!isDesktop}
-                              disableFocusListener={!isDesktop}
-                              disableTouchListener={!isDesktop}
+                              title={
+                                !hideTooltip && e.courseName ? e.courseName : ""
+                              }
+                              disableHoverListener={
+                                hideTooltip || !e.courseName || !isDesktop
+                              }
+                              disableFocusListener={
+                                hideTooltip || !e.courseName || !isDesktop
+                              }
+                              disableTouchListener={
+                                hideTooltip || !e.courseName || !isDesktop
+                              }
                               slotProps={{
                                 tooltip: {
                                   sx: {
@@ -239,60 +293,62 @@ export default function WeeklySchedule({
                                 },
                               }}
                             >
+                              <Chip
+                                size="small"
+                                color="primary"
+                                label={`${e.courseCode ?? ""}${
+                                  e.section ? ` (${e.section})` : ""
+                                }`}
+                                sx={{ fontWeight: 600 }}
+                              />
+                            </Tooltip>
+
+                            {!!e.sectionType && (
+                              <Chip
+                                size="small"
+                                variant="outlined"
+                                label={e.sectionType}
+                              />
+                            )}
+
+                            {!!e.courseName && !hideTooltip && !isDesktop && (
                               <IconButton
                                 size="small"
-                                onClick={
-                                  !isDesktop
-                                    ? (ev) => {
-                                        setAnchorEl(ev.currentTarget);
-                                        setContent(e.courseName ?? "");
-                                      }
-                                    : undefined
-                                }
-                                sx={{ ml: 0.5 }}
+                                className="no-print"
+                                onClick={(ev) => {
+                                  setAnchorEl(ev.currentTarget);
+                                  setContent(e.courseName ?? "");
+                                }}
                                 aria-label="show course name"
                               >
                                 <InfoOutlinedIcon
                                   fontSize="inherit"
                                   color={isDark ? "secondary" : "primary"}
-                                  sx={{
-                                    opacity: isDesktop ? 0.8 : 1,
-                                    "&:hover": {
-                                      opacity: isDesktop ? 1 : 0.8,
-                                    },
-                                  }}
                                 />
                               </IconButton>
-                            </Tooltip>
+                            )}
+                          </Box>
+
+                          {!hideInstructor && !!e.instructor && (
+                            <Typography
+                              variant="caption"
+                              component="div"
+                              sx={{ color: "text.secondary", textAlign: "center" }}
+                            >
+                              {e.instructor}
+                            </Typography>
                           )}
-                        </Box>
 
-                        {/* instructor / hall */}
-                        {!hideInstructor && (
-                          <Typography
-                            variant="caption"
-                            component="div"
-                            sx={{
-                              color: theme.palette.getContrastText(
-                                theme.palette.primary.light
-                              ),
-                            }}
-                          >
-                            {e.instructor}
-                          </Typography>
-                        )}
-
-                        <Typography
-                          variant="caption"
-                          component="div"
-                          sx={{
-                            color: theme.palette.getContrastText(
-                              theme.palette.primary.light
-                            ),
-                          }}
-                        >
-                          {e.hall}
-                        </Typography>
+                          {!!e.hall && (
+                            <Typography
+                              variant="caption"
+                              component="div"
+                              sx={{ color: "text.secondary", textAlign: "center" }}
+                            >
+                              {e.hall}
+                            </Typography>
+                          )}
+                        </Stack>
                       </Box>
                     ))}
                   </TableCell>

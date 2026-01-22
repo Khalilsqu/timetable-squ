@@ -37,11 +37,16 @@ export function buildScheduleColumns(): MRT_ColumnDef<SheetRow>[] {
   return COLUMN_ORDER.map(({ key, title }) => ({
     header: title,
     accessorKey: key,
+    minSize: 100,
     size:
       key === "course_code" || key === "section"
-        ? 110
+        ? 150
         : key === "course_name" || key === "instructor"
-        ? 200
-        : 140,
+        ? 350
+        : key === "college" || key === "department"
+        ? 300
+        : key === "course_language" || key === "room_capacity"
+        ? 220
+        : 200,
   }));
 }

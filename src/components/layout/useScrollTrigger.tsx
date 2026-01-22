@@ -16,6 +16,7 @@ const ScrollTop = () => {
       <Fab
         size="small"
         color="primary"
+        className="no-print"
         onClick={handleClick}
         sx={{
           position: "fixed",
