@@ -284,7 +284,6 @@ export default function WeeklySchedule({
                             }}
                           >
                             <Tooltip
-                              className="no-print"
                               title={
                                 !hideTooltip && e.courseName ? e.courseName : ""
                               }
@@ -298,6 +297,9 @@ export default function WeeklySchedule({
                                 hideTooltip || !e.courseName || !isDesktop
                               }
                               slotProps={{
+                                popper: {
+                                  className: "no-print",
+                                },
                                 tooltip: {
                                   sx: {
                                     fontSize: isDesktop ? "0.95rem" : undefined,

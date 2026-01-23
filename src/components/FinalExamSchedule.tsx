@@ -427,11 +427,15 @@ export default function FinalExamSchedule({
                         >
                           <Stack spacing={0.75} alignItems="center">
                             <Tooltip
-                              className="no-print"
                               title={item.courseName || ""}
                               disableHoverListener={!item.courseName}
                               disableFocusListener={!item.courseName}
                               disableTouchListener={!item.courseName}
+                              slotProps={{
+                                popper: {
+                                  className: "no-print",
+                                },
+                              }}
                             >
                               <Chip
                                 size="small"

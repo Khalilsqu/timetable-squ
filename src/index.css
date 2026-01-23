@@ -46,9 +46,26 @@ body {
 }
 
 @media print {
+  /* try to preserve colors (browser setting may still be required) */
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
   .no-print {
     display: none !important;
   }
+
+  /* Ensure primary chips (course codes) remain readable when backgrounds are not printed */
+  .MuiChip-colorPrimary {
+    background-color: transparent !important;
+    border: 1px solid rgba(0, 0, 0, 0.85) !important;
+    color: rgba(0, 0, 0, 0.95) !important;
+  }
+  .MuiChip-colorPrimary .MuiChip-label {
+    color: inherit !important;
+  }
+
   /* ensure A4 Landscape margins */
   @page {
     size: A4 landscape;
