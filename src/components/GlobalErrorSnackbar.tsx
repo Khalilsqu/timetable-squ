@@ -4,7 +4,7 @@ import { Snackbar, Alert } from "@mui/material";
 import { useNotificationStore } from "@/src/stores/notificationStore";
 
 const GlobalErrorSnackbar = () => {
-  const { isOpen, message, handleClose } = useNotificationStore();
+  const { isOpen, message, severity, handleClose } = useNotificationStore();
 
   return (
     <Snackbar
@@ -12,7 +12,7 @@ const GlobalErrorSnackbar = () => {
       onClose={handleClose}
       anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
     >
-      <Alert onClose={handleClose} severity="error" sx={{ width: "100%" }}>
+      <Alert onClose={handleClose} severity={severity} sx={{ width: "100%" }}>
         {message}
       </Alert>
     </Snackbar>
@@ -20,4 +20,3 @@ const GlobalErrorSnackbar = () => {
 };
 
 export default GlobalErrorSnackbar;
-

@@ -21,6 +21,7 @@ import WeeklySchedule from "@/src/components/WeeklySchedule";
 import SectionSearch from "@/src/pages/student/SectionSearch";
 import SelectedCourseChips from "@/src/pages/student/SelectedCourseChips";
 import TimetableSummaryTable from "@/src/pages/student/TimetableSummaryTable";
+import { useNotificationStore } from "@/src/stores/notificationStore";
 
 import type { SheetRow } from "@/src/lib/googleSheet";
 import type { Row } from "@/src/pages/student/TimetableSummaryTable";
@@ -84,8 +85,24 @@ const examClash = (a: ExamSlot, b: ExamSlot) =>
   toMin(a.start) < toMin(b.end) &&
   toMin(b.start) < toMin(a.end);
 
+const courseCodeOf = (opt: SectionOpt) =>
+  opt.label.split(" (")[0]?.trim() || "";
+const sectionOf = (opt: SectionOpt) => opt.label.match(/\((.+)\)/)?.[1] ?? "";
+
+const duplicateCourseReason = (opt: SectionOpt, chosen: SectionOpt[]) => {
+  const code = courseCodeOf(opt);
+  if (!code) return null;
+
+  const already = chosen.find((c) => courseCodeOf(c) === code);
+  if (!already) return null;
+
+  const sec = sectionOf(already);
+  return sec ? `already selected in section ${sec}` : "already selected";
+};
+
 const conflictReason = (opt: SectionOpt, chosen: SectionOpt[]) => {
-  if (chosen.some((c) => c.id === opt.id)) return "already selected";
+  const dup = duplicateCourseReason(opt, chosen);
+  if (dup) return dup;
 
   const lectures = opt.slots
     .filter((slot) =>
@@ -163,6 +180,31 @@ export default function StudentTimetableContent() {
 
   /* 4️⃣  timetable store ---------------------------------------------- */
   const { chosen, pick, remove, allowConflicts } = useTimetableStore();
+  const showWarning = useNotificationStore((s) => s.showWarning);
+
+  const onPickUniqueCourse = (sec: SectionOpt) => {
+    const code = courseCodeOf(sec);
+    if (!code) {
+      pick(sec);
+      return;
+    }
+
+    const already = chosen.find((c) => courseCodeOf(c) === code);
+    if (already && already.id !== sec.id) {
+      const alreadySec = sectionOf(already);
+      const nextSec = sectionOf(sec);
+      const msg =
+        alreadySec && nextSec && nextSec !== alreadySec
+          ? `${code} already selected in section ${alreadySec} (can't also pick section ${nextSec}).`
+          : alreadySec
+            ? `${code} already selected in section ${alreadySec}.`
+            : `${code} already selected.`;
+      showWarning(msg);
+      return;
+    }
+
+    pick(sec);
+  };
 
   /* 5️⃣  weekly grid rows --------------------------------------------- */
   const scheduleData = useMemo<SheetRow[]>(() => {
@@ -344,8 +386,10 @@ export default function StudentTimetableContent() {
           <SectionSearch
             sections={sections}
             chosen={chosen}
-            onPick={pick}
-            getConflictReason={allowConflicts ? () => null : conflictReason}
+            onPick={onPickUniqueCourse}
+            getConflictReason={
+              allowConflicts ? duplicateCourseReason : conflictReason
+            }
             loading={rowsLoading}
           />
         </Box>

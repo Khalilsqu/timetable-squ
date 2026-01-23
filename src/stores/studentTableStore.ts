@@ -21,7 +21,17 @@ interface TimetableState {
 
 export const useTimetableStore = create<TimetableState>((set) => ({
   chosen: [],
-  pick: (sec) => set((s) => ({ chosen: [...s.chosen, sec] })),
+  pick: (sec) =>
+    set((s) => {
+      const courseCode = sec.label.split(" (")[0]?.trim();
+      if (!courseCode) return { chosen: [...s.chosen, sec] };
+
+      const alreadyHasCourse = s.chosen.some(
+        (c) => c.label.split(" (")[0]?.trim() === courseCode,
+      );
+
+      return alreadyHasCourse ? s : { chosen: [...s.chosen, sec] };
+    }),
   remove: (id) => set((s) => ({ chosen: s.chosen.filter((c) => c.id !== id) })),
   clear: () => set({ chosen: [] }),
   allowConflicts: false,
