@@ -22,6 +22,46 @@ import { useScheduleRows, useSemesters } from "@/src/lib/queries";
 type ExamSlot = { date: string; start: string; end: string };
 type MeetingSlot = { day: string; start: string; end: string; hall: string };
 
+const DAY_ORDER: Record<string, string> = {
+  sun: "SUN",
+  sunday: "SUN",
+  mon: "MON",
+  monday: "MON",
+  tue: "TUE",
+  tues: "TUE",
+  tuesday: "TUE",
+  wed: "WED",
+  weds: "WED",
+  wednesday: "WED",
+  thu: "THU",
+  thur: "THU",
+  thurs: "THU",
+  thursday: "THU",
+  fri: "FRI",
+  friday: "FRI",
+  sat: "SAT",
+  saturday: "SAT",
+};
+
+const canonicalDay3 = (raw: unknown): string | null => {
+  if (typeof raw !== "string") return null;
+  const key = raw.trim().toLowerCase();
+  return DAY_ORDER[key] ?? null;
+};
+
+const extractCanonicalDays3 = (raw: unknown): string[] => {
+  if (typeof raw !== "string") return [];
+  const parts = raw.split(/[^A-Za-z]+/).filter(Boolean);
+  const uniq: string[] = [];
+  for (const p of parts) {
+    const c = canonicalDay3(p);
+    if (c && !uniq.includes(c)) uniq.push(c);
+  }
+  return uniq;
+};
+
+const isHHMM = (s: string) => /^\d{2}:\d{2}$/.test(s);
+
 const toMin = (hms: string) => {
   const [h, m, s = 0] = hms.split(":").map(Number);
   return h * 60 + m + s / 60;
@@ -42,7 +82,7 @@ const conflictReason = (opt: SectionOpt, chosen: SectionOpt[]) => {
 
   const lectures = opt.slots
     .filter((slot) =>
-      chosen.some((c) => c.slots.some((s) => meetingClash(s, slot)))
+      chosen.some((c) => c.slots.some((s) => meetingClash(s, slot))),
     )
     .map((slot) => `${slot.day.toUpperCase()}:${slot.start}–${slot.end}`);
 
@@ -117,22 +157,34 @@ export default function StudentTimetableContent() {
 
   /* 5️⃣  weekly grid rows --------------------------------------------- */
   const scheduleData = useMemo<SheetRow[]>(() => {
+    const chosenIds = new Set(chosen.map((c) => c.id));
+    if (chosenIds.size === 0) return [];
+
     const out: SheetRow[] = [];
 
-    chosen.forEach((c) => {
-      const template = rows.find((r) => {
-        const id = `${r.course_code}-${r.section}`;
-        return id === c.id;
-      });
-      if (!template) return;
+    rows.forEach((r) => {
+      const id = `${r.course_code}-${r.section}`;
+      if (!chosenIds.has(id)) return;
 
-      c.slots.forEach((slot) => {
+      const start = String(r.start_time ?? "")
+        .trim()
+        .slice(0, 5);
+      const end = String(r.end_time ?? "")
+        .trim()
+        .slice(0, 5);
+      if (!isHHMM(start) || !isHHMM(end)) return;
+
+      const hall = String(r.hall ?? "TBA").trim() || "TBA";
+      const days = extractCanonicalDays3(r.day);
+      if (days.length === 0) return;
+
+      days.forEach((day) => {
         out.push({
-          ...template,
-          day: slot.day.toUpperCase(),
-          start_time: slot.start,
-          end_time: slot.end,
-          hall: slot.hall,
+          ...r,
+          day,
+          start_time: start,
+          end_time: end,
+          hall,
         } as SheetRow);
       });
     });
@@ -147,19 +199,37 @@ export default function StudentTimetableContent() {
         const [code] = c.label.split(" (");
         const section = c.label.match(/\((.+)\)/)?.[1] ?? "—";
 
-        const ref = rows.find((r) => `${r.course_code}-${r.section}` === c.id);
+        const refs = rows.filter(
+          (r) => `${r.course_code}-${r.section}` === c.id,
+        );
+        const first = refs[0];
+        const instructors = Array.from(
+          new Set(
+            refs
+              .map((r) => String(r?.instructor ?? "").trim())
+              .filter((s) => s.length > 0),
+          ),
+        );
+        const instructor =
+          instructors.length === 0
+            ? "—"
+            : instructors.length === 1
+              ? instructors[0]
+              : instructors.length <= 3
+                ? instructors.join(" / ")
+                : `Multiple (${instructors.length})`;
 
         return {
           code,
-          courseName: String(ref?.course_name ?? "—"), // ← stringify
+          courseName: String(first?.course_name ?? "—"), // ← stringify
           section,
-          instructor: String(ref?.instructor ?? "—"), // ← stringify
+          instructor,
           examDate: c.exam
             ? `${c.exam.date} @ ${c.exam.start}–${c.exam.end}`
             : "—",
         };
       }),
-    [chosen, rows]
+    [chosen, rows],
   );
 
   /* 7️⃣  loading / error states --------------------------------------- */
@@ -205,12 +275,7 @@ export default function StudentTimetableContent() {
 
       {/* weekly grid / empty state */}
       {scheduleData.length ? (
-        <WeeklySchedule
-          data={scheduleData}
-          semester={semester}
-          hideInstructor
-          hideTooltip
-        />
+        <WeeklySchedule data={scheduleData} semester={semester} hideTooltip />
       ) : (
         <Typography
           variant="body1"
