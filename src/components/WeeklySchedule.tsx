@@ -1,6 +1,6 @@
 // src/components/WeeklySchedule.tsx
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import {
   Box,
   Chip,
@@ -40,6 +40,7 @@ interface WeeklyScheduleProps {
   semester?: string;
   hideInstructor?: boolean;
   hideTooltip?: boolean;
+  headerLeft?: ReactNode;
 }
 
 const DAYS_ORDER = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
@@ -72,6 +73,7 @@ export default function WeeklySchedule({
   semester,
   hideInstructor = false,
   hideTooltip = false,
+  headerLeft,
 }: WeeklyScheduleProps) {
   const theme = useTheme();
   const isDark = useLayoutStore((s) => s.isDarkTheme);
@@ -80,7 +82,13 @@ export default function WeeklySchedule({
   /* 1. derive days & time-slots --------------------------------------- */
   const daysOfWeek = useMemo(() => {
     const uniq = Array.from(
-      new Set(data.map((d) => String(d.day ?? "").trim().toUpperCase()))
+      new Set(
+        data.map((d) =>
+          String(d.day ?? "")
+            .trim()
+            .toUpperCase(),
+        ),
+      ),
     ).filter(Boolean);
     return uniq.sort((a, b) => DAYS_ORDER.indexOf(a) - DAYS_ORDER.indexOf(b));
   }, [data]);
@@ -90,9 +98,9 @@ export default function WeeklySchedule({
       new Set(
         data.map(
           (d) =>
-            `${String(d.start_time ?? "").trim()}-${String(d.end_time ?? "").trim()}`
-        )
-      )
+            `${String(d.start_time ?? "").trim()}-${String(d.end_time ?? "").trim()}`,
+        ),
+      ),
     ).filter((ts) => ts !== "-");
     return uniq.sort((a, b) => {
       const tA = parseTimeRange(a);
@@ -111,9 +119,11 @@ export default function WeeklySchedule({
     });
 
     data.forEach((row) => {
-      const day = String(row.day ?? "").trim().toUpperCase();
+      const day = String(row.day ?? "")
+        .trim()
+        .toUpperCase();
       const ts = `${String(row.start_time ?? "").trim()}-${String(
-        row.end_time ?? ""
+        row.end_time ?? "",
       ).trim()}`;
       if (!g[day] || !g[day][ts]) return;
       g[day][ts].push({
@@ -152,13 +162,16 @@ export default function WeeklySchedule({
         <Typography variant="h6">
           Weekly Schedule{semester && `: ${semester}`}
         </Typography>
-        <Button
-          variant="outlined"
-          startIcon={<PrintIcon />}
-          onClick={() => window.print()}
-        >
-          Print
-        </Button>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          {headerLeft}
+          <Button
+            variant="outlined"
+            startIcon={<PrintIcon />}
+            onClick={() => window.print()}
+          >
+            Print
+          </Button>
+        </Box>
       </Box>
 
       {/* ——— table ——— */}
@@ -333,7 +346,10 @@ export default function WeeklySchedule({
                             <Typography
                               variant="caption"
                               component="div"
-                              sx={{ color: "text.secondary", textAlign: "center" }}
+                              sx={{
+                                color: "text.secondary",
+                                textAlign: "center",
+                              }}
                             >
                               {e.instructor}
                             </Typography>
@@ -343,7 +359,10 @@ export default function WeeklySchedule({
                             <Typography
                               variant="caption"
                               component="div"
-                              sx={{ color: "text.secondary", textAlign: "center" }}
+                              sx={{
+                                color: "text.secondary",
+                                textAlign: "center",
+                              }}
                             >
                               {e.hall}
                             </Typography>

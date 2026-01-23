@@ -1,5 +1,5 @@
 // src/pages/department/FinalExamSchedule.tsx
-import { useMemo } from "react";
+import { useMemo, type ReactNode } from "react";
 import {
   Box,
   Button,
@@ -24,13 +24,15 @@ interface FinalExamScheduleProps {
   data: SheetRow[];
   department: string;
   semester?: string;
+  headerLeft?: ReactNode;
 }
 
 type ExamCellItem = {
   courseCode: string;
   courseName: string;
   instructor: string;
-  hall: string;
+  examBuilding: string;
+  examHall: string;
 };
 
 const mergeCsv = (a: string, b: string) => {
@@ -39,7 +41,7 @@ const mergeCsv = (a: string, b: string) => {
       v
         .split(",")
         .map((s) => s.trim())
-        .filter(Boolean)
+        .filter(Boolean),
     )
     .filter(Boolean);
   return Array.from(new Set(parts)).join(", ");
@@ -99,6 +101,7 @@ export default function FinalExamSchedule({
   data,
   department,
   semester,
+  headerLeft,
 }: FinalExamScheduleProps) {
   // access theme for divider colors
   const theme = useTheme();
@@ -145,8 +148,8 @@ export default function FinalExamSchedule({
       .map(
         (r) =>
           `${String(r.exam_start_time ?? "").trim()}-${String(
-            r.exam_end_time ?? ""
-          ).trim()}`
+            r.exam_end_time ?? "",
+          ).trim()}`,
       );
     const uniq = Array.from(new Set(slots));
     return uniq.sort((a, b) => {
@@ -159,7 +162,10 @@ export default function FinalExamSchedule({
   // build grid: dateStr -> timeslot -> entries
   const grid = useMemo(() => {
     const g: Record<string, Record<string, ExamCellItem[]>> = {};
-    const agg: Record<string, Record<string, Record<string, ExamCellItem>>> = {};
+    const agg: Record<
+      string,
+      Record<string, Record<string, ExamCellItem>>
+    > = {};
 
     dates.forEach(({ dateStr }) => {
       g[dateStr] = {};
@@ -171,7 +177,7 @@ export default function FinalExamSchedule({
     data.forEach((row) => {
       const ds = String(row.exam_date ?? "").trim();
       const ts = `${String(row.exam_start_time ?? "").trim()}-${String(
-        row.exam_end_time ?? ""
+        row.exam_end_time ?? "",
       ).trim()}`;
       if (!agg[ds] || !agg[ds][ts]) return;
 
@@ -184,18 +190,23 @@ export default function FinalExamSchedule({
           courseCode,
           courseName: String(row.course_name ?? "").trim(),
           instructor: String(row.instructor ?? "").trim(),
-          hall: String(row.exam_hall ?? row.hall ?? "").trim(),
+          examBuilding: String(row.exam_building ?? "").trim(),
+          examHall: String(row.exam_hall ?? "").trim() || "TBA",
         };
       } else {
         existing.courseName =
           existing.courseName || String(row.course_name ?? "").trim();
         existing.instructor = mergeCsv(
           existing.instructor,
-          String(row.instructor ?? "").trim()
+          String(row.instructor ?? "").trim(),
         );
-        existing.hall = mergeCsv(
-          existing.hall,
-          String(row.exam_hall ?? row.hall ?? "").trim()
+        existing.examBuilding = mergeCsv(
+          existing.examBuilding,
+          String(row.exam_building ?? "").trim(),
+        );
+        existing.examHall = mergeCsv(
+          existing.examHall,
+          String(row.exam_hall ?? "").trim() || "TBA",
         );
       }
     });
@@ -203,7 +214,7 @@ export default function FinalExamSchedule({
     dates.forEach(({ dateStr }) => {
       timeSlots.forEach((ts) => {
         const items = Object.values(agg[dateStr]?.[ts] ?? {}).sort((a, b) =>
-          a.courseCode.localeCompare(b.courseCode)
+          a.courseCode.localeCompare(b.courseCode),
         );
         g[dateStr][ts] = items;
       });
@@ -215,10 +226,29 @@ export default function FinalExamSchedule({
   if (data.length === 0) {
     return (
       <Box>
-        <Typography variant="h6" gutterBottom>
-          Final Exam Schedule for {department}
-          {semester ? ` · ${semester}` : ""}
-        </Typography>
+        <Box
+          display="flex"
+          justifyContent="space-between"
+          alignItems="center"
+          mb={2}
+          className="no-print"
+        >
+          <Typography variant="h6">
+            Final Exam Schedule for {department}
+            {semester ? `: ${semester}` : ""}
+          </Typography>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            {headerLeft}
+            <Button
+              variant="outlined"
+              startIcon={<PrintIcon />}
+              onClick={() => window.print()}
+            >
+              Print
+            </Button>
+          </Box>
+        </Box>
+
         <Typography variant="body2" color="text.secondary">
           No final exam schedule available.
         </Typography>
@@ -237,16 +267,19 @@ export default function FinalExamSchedule({
         className="no-print"
       >
         <Typography variant="h6">
-          Final Exam Schedule
+          Final Exam Schedule for {department}
           {semester ? `: ${semester}` : ""}
         </Typography>
-        <Button
-          variant="outlined"
-          startIcon={<PrintIcon />}
-          onClick={() => window.print()}
-        >
-          Print
-        </Button>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          {headerLeft}
+          <Button
+            variant="outlined"
+            startIcon={<PrintIcon />}
+            onClick={() => window.print()}
+          >
+            Print
+          </Button>
+        </Box>
       </Box>
       <TableContainer
         component={Paper}
@@ -408,12 +441,21 @@ export default function FinalExamSchedule({
                               />
                             </Tooltip>
 
-                            {item.hall ? (
+                            {item.examBuilding ? (
                               <Typography
                                 variant="caption"
                                 sx={{ color: "text.secondary" }}
                               >
-                                {item.hall}
+                                {item.examBuilding}
+                              </Typography>
+                            ) : null}
+
+                            {item.examHall ? (
+                              <Typography
+                                variant="caption"
+                                sx={{ color: "text.secondary" }}
+                              >
+                                {item.examHall}
                               </Typography>
                             ) : null}
 

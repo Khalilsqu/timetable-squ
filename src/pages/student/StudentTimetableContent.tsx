@@ -1,6 +1,12 @@
 // src/pages/student/StudentTimetableContent.tsx
-import { Box, Typography, Stack } from "@mui/material";
-import { useMemo } from "react";
+import {
+  Box,
+  Typography,
+  Stack,
+  ToggleButton,
+  ToggleButtonGroup,
+} from "@mui/material";
+import { useMemo, useState } from "react";
 import AllowConflictsToggle from "@/src/pages/student/AllowConflictsToggle";
 
 import { useFilterStore } from "@/src/stores/filterStore";
@@ -10,6 +16,7 @@ import {
 } from "@/src/stores/studentTableStore";
 
 import MyCustomSpinner from "@/src/components/MyCustomSpinner";
+import FinalExamSchedule from "@/src/components/FinalExamSchedule";
 import WeeklySchedule from "@/src/components/WeeklySchedule";
 import SectionSearch from "@/src/pages/student/SectionSearch";
 import SelectedCourseChips from "@/src/pages/student/SelectedCourseChips";
@@ -98,6 +105,8 @@ const conflictReason = (opt: SectionOpt, chosen: SectionOpt[]) => {
 
 /* ─────────── component ─────────── */
 export default function StudentTimetableContent() {
+  const [view, setView] = useState<"lectures" | "exams">("lectures");
+
   const {
     data: semData,
     isLoading: semLoading,
@@ -192,6 +201,79 @@ export default function StudentTimetableContent() {
     return out;
   }, [chosen, rows]);
 
+  /* 5️⃣b final exam weekly view rows ---------------------------------- */
+  const finalExamData = useMemo<SheetRow[]>(() => {
+    const chosenCourseCodes = new Set(
+      chosen
+        .map((c) => c.label.split(" (")[0]?.trim())
+        .filter((s): s is string => Boolean(s)),
+    );
+    if (chosenCourseCodes.size === 0) return [];
+
+    const out: SheetRow[] = [];
+    const seen = new Set<string>();
+
+    rows.forEach((r) => {
+      const courseCode = String(r.course_code ?? "").trim();
+      if (!courseCode || !chosenCourseCodes.has(courseCode)) return;
+
+      const examDate = String(r.exam_date ?? "").trim();
+      const examStart = String(r.exam_start_time ?? "")
+        .trim()
+        .slice(0, 5);
+      const examEnd = String(r.exam_end_time ?? "")
+        .trim()
+        .slice(0, 5);
+
+      if (!examDate || !isHHMM(examStart) || !isHHMM(examEnd)) return;
+
+      const examBuilding = String(r.exam_building ?? "").trim();
+      const examHall = String(r.exam_hall ?? "").trim() || "TBA";
+
+      const uniqueKey = [
+        courseCode,
+        examDate,
+        examStart,
+        examEnd,
+        examBuilding.toLowerCase(),
+        examHall.toLowerCase(),
+      ].join("|");
+      if (seen.has(uniqueKey)) return;
+      seen.add(uniqueKey);
+
+      out.push({
+        ...r,
+        course_code: courseCode,
+        exam_date: examDate,
+        exam_start_time: examStart,
+        exam_end_time: examEnd,
+        exam_building: examBuilding,
+        exam_hall: examHall,
+      } as SheetRow);
+    });
+
+    return out;
+  }, [chosen, rows]);
+
+  const viewToggle = (
+    <ToggleButtonGroup
+      size="small"
+      exclusive
+      value={view}
+      onChange={(_, next) => {
+        if (next) setView(next);
+      }}
+      aria-label="schedule view"
+    >
+      <ToggleButton value="lectures" aria-label="lectures view">
+        Lectures
+      </ToggleButton>
+      <ToggleButton value="exams" aria-label="final exams view">
+        Final Exams
+      </ToggleButton>
+    </ToggleButtonGroup>
+  );
+
   /* 6️⃣  summary table rows --------------------------------------------- */
   const summaryRows = useMemo<Row[]>(
     () =>
@@ -273,17 +355,31 @@ export default function StudentTimetableContent() {
       {/* chips */}
       <SelectedCourseChips chosen={chosen} onRemove={remove} />
 
-      {/* weekly grid / empty state */}
-      {scheduleData.length ? (
-        <WeeklySchedule data={scheduleData} semester={semester} hideTooltip />
+      {/* schedule view */}
+      {view === "lectures" ? (
+        scheduleData.length ? (
+          <WeeklySchedule
+            data={scheduleData}
+            semester={semester}
+            hideTooltip
+            headerLeft={viewToggle}
+          />
+        ) : (
+          <Typography
+            variant="body1"
+            color="text.secondary"
+            sx={{ mt: 4, textAlign: "center" }}
+          >
+            Your schedule is empty.
+          </Typography>
+        )
       ) : (
-        <Typography
-          variant="body1"
-          color="text.secondary"
-          sx={{ mt: 4, textAlign: "center" }}
-        >
-          Your schedule is empty.
-        </Typography>
+        <FinalExamSchedule
+          data={finalExamData}
+          department="Selected Courses"
+          semester={semester}
+          headerLeft={viewToggle}
+        />
       )}
 
       {/* summary */}
