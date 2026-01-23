@@ -177,7 +177,7 @@ export async function fetchSheetData(): Promise<SheetData> {
         // doesn’t match, we simply store the original string on
         // `exam_date_time`.
         const match = asString.match(
-          /(\d{2}\/\d{2}\/\d{4})\s+([A-Za-z]{3})\s+(\d{1,2}:\d{2})(?::\d{2})?\s*[-–]\s*(\d{1,2}:\d{2})(?::\d{2})?/
+          /(\d{2}\/\d{2}\/\d{4})\s+([A-Za-z]{3})\s+(\d{1,2}:\d{2})(?::\d{2})?\s*[-–]\s*(\d{1,2}:\d{2})(?::\d{2})?/,
         );
         if (match) {
           const [, date, day, start, end] = match;
@@ -236,5 +236,23 @@ export async function fetchSheetData(): Promise<SheetData> {
     }
   }
 
-  return { columns, rows: uniqueRows };
+  const norm = (v: unknown) =>
+    String(v ?? "")
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, "")
+      .replace(/\s+/g, " ");
+
+  const filteredRows = uniqueRows.filter((row) => {
+    const hall = norm(row.hall);
+    const building = norm(row.building);
+    const instructor = norm(row.instructor);
+    const isClosedSection =
+      hall === "clo" &&
+      building === "closed section" &&
+      instructor === "to be announced";
+    return !isClosedSection;
+  });
+
+  return { columns, rows: filteredRows };
 }

@@ -441,15 +441,6 @@ export default function FinalExamSchedule({
                               />
                             </Tooltip>
 
-                            {item.examBuilding ? (
-                              <Typography
-                                variant="caption"
-                                sx={{ color: "text.secondary" }}
-                              >
-                                {item.examBuilding}
-                              </Typography>
-                            ) : null}
-
                             {item.examHall ? (
                               <Typography
                                 variant="caption"
