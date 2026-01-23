@@ -14,14 +14,14 @@ const getParam = (sp: URLSearchParams, k: string) => sp.get(k) ?? undefined;
 
 type SetSearchParams = (
   nextInit: URLSearchParams,
-  opts?: { replace?: boolean }
+  opts?: { replace?: boolean },
 ) => void;
 
 const setParam = (
   sp: URLSearchParams,
   k: string,
   v: string | undefined,
-  replaceFn: SetSearchParams //
+  replaceFn: SetSearchParams, //
 ) => {
   const next = new URLSearchParams(sp);
 
@@ -144,7 +144,8 @@ export default function CollegeTimetable() {
             color="text.secondary"
             sx={{ mt: 2, textAlign: "center" }}
           >
-            Please select a college to view its un-departmented course schedule.
+            Select a college to view its college-level course schedule (courses
+            not assigned to a department).
           </Typography>
         )}
       </Box>
