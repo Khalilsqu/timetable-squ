@@ -326,7 +326,7 @@ export default function FinalExamSchedule({
     });
 
     return g;
-  }, [data, dates, timeSlots]);
+  }, [data, dates, timeSlots, instructorsByCourseSection]);
 
   if (data.length === 0) {
     return (

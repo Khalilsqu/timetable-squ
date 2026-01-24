@@ -10,6 +10,7 @@ import InstructorTimetable from "./pages/faculty/InstructorTimetable";
 import DepartmentTimetable from "@/src/pages/department/DepartmentTimetable";
 import CollegeTimetable from "@/src/pages/college/CollegeTimeTable";
 import CommonSlot from "@/src/pages/common/CommonSlot";
+import StatsPage from "@/src/pages/StatsPage";
 
 /* --- 1. A small wrapper that gets the current location --- */
 const AnimatedRoutes = () => {
@@ -27,6 +28,7 @@ const AnimatedRoutes = () => {
           <Route path="department" element={<DepartmentTimetable />} />
           <Route path="college" element={<CollegeTimetable />} />
           <Route path="common-slot" element={<CommonSlot />} />
+          <Route path="stats" element={<StatsPage />} />
         </Route>
       </Routes>
     </AnimatePresence>

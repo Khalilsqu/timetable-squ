@@ -4,6 +4,7 @@ import {
   useState,
   useRef,
   useEffect,
+  useCallback,
 } from "react";
 import { useSearchParams } from "react-router";
 import {
@@ -11,12 +12,19 @@ import {
   Toolbar,
   Switch,
   Box,
+  ButtonBase,
+  Collapse,
+  Grow,
   IconButton,
   Drawer,
   List,
   ListItemButton,
   ListItemText,
+  MenuItem,
+  MenuList,
   Autocomplete,
+  Paper,
+  Popper,
   TextField,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
@@ -24,6 +32,8 @@ import LightModeIcon from "@mui/icons-material/LightMode";
 import DarkModeIcon from "@mui/icons-material/DarkMode";
 import HomeIcon from "@mui/icons-material/Home";
 import FilterAltIcon from "@mui/icons-material/FilterAlt";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import { Link as RouterLink, NavLink, useLocation } from "react-router";
 import { styled, alpha } from "@mui/material/styles";
 import { useLayoutStore } from "@/src/stores/layoutStore";
@@ -36,7 +46,11 @@ const navItems = [
   { label: "Faculty", path: "/faculty" },
   { label: "Department", path: "/department" },
   { label: "College", path: "/college" },
+];
+
+const extraItems = [
   { label: "Common Slot", path: "/common-slot" },
+  { label: "Statistics", path: "/stats" },
 ];
 
 // styled nav link
@@ -84,13 +98,62 @@ const NavAnchor = styled(NavLink)(({ theme }) => {
   };
 });
 
+const NavButton = styled(ButtonBase)(({ theme }) => {
+  const isDark = theme.palette.mode === "dark";
+  return {
+    position: "relative",
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 6,
+    padding: "4px 12px",
+    borderRadius: 20,
+    fontSize: 14,
+    lineHeight: 1.4,
+    color: theme.palette.text.secondary,
+    fontWeight: 500,
+    transition: "background-color .25s,color .25s",
+    outline: "none",
+    "&:hover": {
+      backgroundColor: alpha(theme.palette.primary.main, isDark ? 0.25 : 0.1),
+      color: theme.palette.text.primary,
+    },
+    "&.active": {
+      color: theme.palette.primary.contrastText,
+      backgroundColor: theme.palette.primary.main,
+      fontWeight: 600,
+    },
+    "&.active::after": {
+      content: '""',
+      position: "absolute",
+      left: 10,
+      right: 10,
+      bottom: 3,
+      height: 2,
+      borderRadius: 2,
+      backgroundColor: theme.palette.primary.contrastText,
+      opacity: 0.9,
+    },
+    "&:focus-visible": {
+      boxShadow: `0 0 0 3px ${alpha(
+        isDark ? theme.palette.primary.light : theme.palette.primary.main,
+        0.5
+      )}`,
+    },
+  };
+});
+
 const AppHeader = () => {
-  const { search } = useLocation();
+  const routerLocation = useLocation();
+  const { search } = routerLocation;
   const [drawerOpen, setDrawerOpen] = useState(false);
   const isDark = useLayoutStore((s) => s.isDarkTheme);
   const setDark = useLayoutStore((s) => s.setIsDarkTheme);
   const [, setSearchParams] = useSearchParams();
   const [filterOpen, setFilterOpen] = useState(false);
+  const [extraAnchorEl, setExtraAnchorEl] = useState<HTMLElement | null>(null);
+  const [mobileExtraOpen, setMobileExtraOpen] = useState(false);
+  const extraCloseTimerRef = useRef<number | null>(null);
+  const extraMenuPaperRef = useRef<HTMLDivElement | null>(null);
 
   // Semester Logic
   const { data: semInfo } = useSemesters();
@@ -103,6 +166,53 @@ const AppHeader = () => {
   }, [semester, activeSem, setSemester]);
 
   const semesterOptions = semInfo?.list ?? [];
+  const extraActive = extraItems.some((item) =>
+    routerLocation.pathname.startsWith(item.path)
+  );
+  const extraMenuOpen = Boolean(extraAnchorEl);
+
+  const cancelExtraClose = useCallback(() => {
+    if (extraCloseTimerRef.current) {
+      window.clearTimeout(extraCloseTimerRef.current);
+      extraCloseTimerRef.current = null;
+    }
+  }, []);
+
+  const closeExtraMenu = useCallback(() => {
+    cancelExtraClose();
+    setExtraAnchorEl(null);
+  }, [cancelExtraClose]);
+
+  const scheduleExtraClose = useCallback(() => {
+    cancelExtraClose();
+    extraCloseTimerRef.current = window.setTimeout(() => {
+      setExtraAnchorEl(null);
+    }, 140);
+  }, [cancelExtraClose]);
+
+  useEffect(() => {
+    if (extraActive) setMobileExtraOpen(true);
+  }, [extraActive]);
+
+  useEffect(() => {
+    closeExtraMenu();
+  }, [routerLocation.pathname, closeExtraMenu]);
+
+  useEffect(() => {
+    if (!extraMenuOpen) return;
+
+    const onPointerDown = (e: PointerEvent) => {
+      const target = e.target as Node | null;
+      if (!target) return;
+
+      if (extraAnchorEl && extraAnchorEl.contains(target)) return;
+      if (extraMenuPaperRef.current?.contains(target)) return;
+      closeExtraMenu();
+    };
+
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => document.removeEventListener("pointerdown", onPointerDown);
+  }, [extraMenuOpen, extraAnchorEl, closeExtraMenu]);
 
   // ---- scroll hide / show state ----
   const [visible, setVisible] = useState(true);
@@ -311,6 +421,75 @@ const AppHeader = () => {
                 {item.label}
               </NavAnchor>
             ))}
+
+            <NavButton
+              className={extraActive ? "active" : undefined}
+              onMouseEnter={(e) => {
+                cancelExtraClose();
+                setExtraAnchorEl(e.currentTarget);
+              }}
+              onMouseLeave={scheduleExtraClose}
+              onClick={(e) => {
+                cancelExtraClose();
+                setExtraAnchorEl((prev) => (prev ? null : e.currentTarget));
+              }}
+              aria-haspopup="menu"
+              aria-expanded={extraMenuOpen ? "true" : undefined}
+              aria-controls={extraMenuOpen ? "extra-menu" : undefined}
+            >
+              Extra
+              <ExpandMoreIcon
+                fontSize="small"
+                sx={{
+                  transition: "transform .15s",
+                  transform: extraMenuOpen ? "rotate(180deg)" : "rotate(0deg)",
+                }}
+              />
+            </NavButton>
+
+            <Popper
+              id="extra-menu"
+              anchorEl={extraAnchorEl}
+              open={extraMenuOpen}
+              placement="bottom-start"
+              transition
+              sx={{ zIndex: (t) => t.zIndex.appBar + 2 }}
+              modifiers={[
+                { name: "offset", options: { offset: [0, 6] } },
+                { name: "flip", options: { padding: 8 } },
+                { name: "preventOverflow", options: { padding: 8 } },
+              ]}
+            >
+              {({ TransitionProps }) => (
+                <Grow {...TransitionProps} style={{ transformOrigin: "0 0" }}>
+                  <Paper
+                    ref={extraMenuPaperRef}
+                    variant="outlined"
+                    onMouseEnter={cancelExtraClose}
+                    onMouseLeave={scheduleExtraClose}
+                    sx={{
+                      borderRadius: 2,
+                      minWidth: 200,
+                      overflow: "hidden",
+                    }}
+                  >
+                    <MenuList dense disablePadding>
+                      {extraItems.map((item) => (
+                        <MenuItem
+                          key={item.path}
+                          selected={routerLocation.pathname.startsWith(item.path)}
+                          component={RouterLink}
+                          to={{ pathname: item.path, search }}
+                          onClick={closeExtraMenu}
+                        >
+                          {item.label}
+                        </MenuItem>
+                      ))}
+                    </MenuList>
+                  </Paper>
+                </Grow>
+              )}
+            </Popper>
           </Box>
 
           {/* desktop dark-mode toggle */}
@@ -320,7 +499,7 @@ const AppHeader = () => {
             gap={1}
             sx={{ display: { xs: "none", md: "flex" } }}
           >
-            {location.pathname === "/" && (
+            {routerLocation.pathname === "/" && (
               <IconButton onClick={() => setFilterOpen(true)} color="inherit">
                 <FilterAltIcon />
               </IconButton>
@@ -335,7 +514,7 @@ const AppHeader = () => {
           </Box>
           
           {/* mobile filter button (shown on right) */}
-          {location.pathname === "/" && (
+          {routerLocation.pathname === "/" && (
              <IconButton
                onClick={() => setFilterOpen(true)}
                color="inherit"
@@ -355,7 +534,7 @@ const AppHeader = () => {
             <Box sx={{ width: 240 }} role="presentation">
               <List>
                 {navItems.map((item) => {
-                  const active = location.pathname.startsWith(item.path);
+                  const active = routerLocation.pathname.startsWith(item.path);
                   return (
                     <ListItemButton
                       key={item.path}
@@ -373,6 +552,42 @@ const AppHeader = () => {
                     </ListItemButton>
                   );
                 })}
+
+                <ListItemButton onClick={() => setMobileExtraOpen((v) => !v)}>
+                  <ListItemText
+                    primary="Extra"
+                    primaryTypographyProps={{
+                      fontWeight: extraActive ? 600 : 500,
+                    }}
+                  />
+                  {mobileExtraOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                </ListItemButton>
+                <Collapse in={mobileExtraOpen} timeout="auto" unmountOnExit>
+                  <List component="div" disablePadding>
+                    {extraItems.map((item) => {
+                      const active = routerLocation.pathname.startsWith(
+                        item.path
+                      );
+                      return (
+                        <ListItemButton
+                          key={item.path}
+                          selected={active}
+                          component={RouterLink}
+                          to={{ pathname: item.path, search }}
+                          sx={{ pl: 4 }}
+                          onClick={() => setDrawerOpen(false)}
+                        >
+                          <ListItemText
+                            primary={item.label}
+                            primaryTypographyProps={{
+                              fontWeight: active ? 600 : 500,
+                            }}
+                          />
+                        </ListItemButton>
+                      );
+                    })}
+                  </List>
+                </Collapse>
               </List>
               <Box
                 sx={{

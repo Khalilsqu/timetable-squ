@@ -17,6 +17,7 @@
     "@mui/material": "^7.2.0",
     "@tanstack/react-query": "^5.81.5",
     "dayjs": "^1.11.19",
+    "echarts": "^5.5.0",
     "export-to-csv": "^1.4.0",
     "framer-motion": "^12.23.0",
     "lottie-react": "^2.4.1",
