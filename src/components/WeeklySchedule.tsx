@@ -189,18 +189,15 @@ export default function WeeklySchedule({
   return (
     <>
       {/* ——— header row ——— */}
-      <Box
-        display="flex"
-        justifyContent="space-between"
-        alignItems="center"
-        mb={2}
-        className="no-print"
-      >
-        <Typography variant="h6">
-          Weekly Schedule{semester && `: ${semester}`}
-        </Typography>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          {headerLeft}
+      <Box mb={2} className="no-print">
+        <Box
+          display="flex"
+          justifyContent="space-between"
+          alignItems="center"
+        >
+          <Typography variant="h6">
+            Weekly Schedule{semester && `: ${semester}`}
+          </Typography>
           <Button
             variant="outlined"
             startIcon={<PrintIcon />}
@@ -209,6 +206,11 @@ export default function WeeklySchedule({
             Print
           </Button>
         </Box>
+        {headerLeft && (
+          <Box display="flex" justifyContent="flex-end" mt={1}>
+            {headerLeft}
+          </Box>
+        )}
       </Box>
 
       {/* ——— table ——— */}

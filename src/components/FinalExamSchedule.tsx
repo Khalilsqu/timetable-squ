@@ -331,19 +331,16 @@ export default function FinalExamSchedule({
   if (data.length === 0) {
     return (
       <Box>
-        <Box
-          display="flex"
-          justifyContent="space-between"
-          alignItems="center"
-          mb={2}
-          className="no-print"
-        >
-          <Typography variant="h6">
-            Final Exam Schedule for {department}
-            {semester ? `: ${semester}` : ""}
-          </Typography>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            {headerLeft}
+        <Box mb={2} className="no-print">
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+          >
+            <Typography variant="h6">
+              Final Exam Schedule for {department}
+              {semester ? `: ${semester}` : ""}
+            </Typography>
             <Button
               variant="outlined"
               startIcon={<PrintIcon />}
@@ -352,6 +349,11 @@ export default function FinalExamSchedule({
               Print
             </Button>
           </Box>
+          {headerLeft && (
+            <Box display="flex" justifyContent="flex-end" mt={1}>
+              {headerLeft}
+            </Box>
+          )}
         </Box>
 
         <Typography variant="body2" color="text.secondary">
@@ -364,19 +366,16 @@ export default function FinalExamSchedule({
   return (
     <Box>
       {/* header with print button */}
-      <Box
-        display="flex"
-        justifyContent="space-between"
-        alignItems="center"
-        mb={2}
-        className="no-print"
-      >
-        <Typography variant="h6">
-          Final Exam Schedule for {department}
-          {semester ? `: ${semester}` : ""}
-        </Typography>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          {headerLeft}
+      <Box mb={2} className="no-print">
+        <Box
+          display="flex"
+          justifyContent="space-between"
+          alignItems="center"
+        >
+          <Typography variant="h6">
+            Final Exam Schedule for {department}
+            {semester ? `: ${semester}` : ""}
+          </Typography>
           <Button
             variant="outlined"
             startIcon={<PrintIcon />}
@@ -385,6 +384,11 @@ export default function FinalExamSchedule({
             Print
           </Button>
         </Box>
+        {headerLeft && (
+          <Box display="flex" justifyContent="flex-end" mt={1}>
+            {headerLeft}
+          </Box>
+        )}
       </Box>
       <TableContainer
         component={Paper}

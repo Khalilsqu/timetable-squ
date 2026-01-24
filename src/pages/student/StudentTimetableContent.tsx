@@ -305,6 +305,7 @@ export default function StudentTimetableContent() {
         return {
           code,
           courseName: String(first?.course_name ?? "—"), // ← stringify
+          creditHours: Number(first?.credit_hours ?? 0) || 0,
           section,
           instructor,
           examDate: c.exam
