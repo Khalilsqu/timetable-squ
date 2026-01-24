@@ -1,4 +1,4 @@
-import { useMemo, useState, useTransition, useEffect, useRef } from "react";
+import { useMemo, useState, useTransition, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -146,13 +146,10 @@ export default function CommonSlot() {
     }, 60);
   };
 
-  const prevView = useRef(view);
   useEffect(() => {
-    if (prevView.current !== view) {
-      if (isSwitching) setIsSwitching(false);
-      prevView.current = view;
-    }
-  }, [view, isSwitching]);
+    const timer = setTimeout(() => setIsSwitching(false), 0);
+    return () => clearTimeout(timer);
+  }, [view]);
 
   // pagination state (same pattern as EntryPage)
   const pagination = useFilterStore((s) => s.pagination);
@@ -180,7 +177,10 @@ export default function CommonSlot() {
     [rows]
   );
 
-  const columns = useMemo<MRT_ColumnDef<SheetRow>[]>(buildScheduleColumns, []);
+  const columns = useMemo<MRT_ColumnDef<SheetRow>[]>(
+    () => buildScheduleColumns(),
+    []
+  );
 
   const filtered = useMemo(() => {
     if (!rows.length) return [];

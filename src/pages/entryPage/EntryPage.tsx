@@ -213,7 +213,10 @@ export default function EntryPage() {
   }, [filteredRows.length, setFilteredNumber]);
 
   /* 2. columns are fixed – memoise once */
-  const columns = useMemo<MRT_ColumnDef<SheetRow>[]>(buildScheduleColumns, []);
+  const columns = useMemo<MRT_ColumnDef<SheetRow>[]>(
+    () => buildScheduleColumns(),
+    []
+  );
 
   /* 3. data is memoised to avoid re-renders on other state changes */
   const tableData = useMemo(() => filteredRows, [filteredRows]);

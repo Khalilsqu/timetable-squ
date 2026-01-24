@@ -120,7 +120,9 @@ export default function StatsCollegeSummaryChart({
     const yMin = splitByLevel && yValues.length ? Math.min(0, ...yValues) : undefined;
     const yMax = splitByLevel && yValues.length ? Math.max(0, ...yValues) : undefined;
     const labelWidth = 36;
-    const yAxisLabel: NonNullable<YAXisOption["axisLabel"]> = splitByLevel
+    const yAxisLabel: NonNullable<
+      Extract<YAXisOption, { type?: "value" }>["axisLabel"]
+    > = splitByLevel
       ? {
           margin: 6,
           color: theme.axisTickLabelColor,

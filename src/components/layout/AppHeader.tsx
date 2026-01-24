@@ -151,7 +151,11 @@ const AppHeader = () => {
   const [, setSearchParams] = useSearchParams();
   const [filterOpen, setFilterOpen] = useState(false);
   const [extraAnchorEl, setExtraAnchorEl] = useState<HTMLElement | null>(null);
-  const [mobileExtraOpen, setMobileExtraOpen] = useState(false);
+  const [extraMenuPathname, setExtraMenuPathname] = useState("");
+  const [mobileExtraOpenWhenInactive, setMobileExtraOpenWhenInactive] =
+    useState(false);
+  const [mobileExtraOpenWhenActive, setMobileExtraOpenWhenActive] =
+    useState(true);
   const extraCloseTimerRef = useRef<number | null>(null);
   const extraMenuPaperRef = useRef<HTMLDivElement | null>(null);
 
@@ -169,7 +173,11 @@ const AppHeader = () => {
   const extraActive = extraItems.some((item) =>
     routerLocation.pathname.startsWith(item.path)
   );
-  const extraMenuOpen = Boolean(extraAnchorEl);
+  const extraMenuOpen =
+    Boolean(extraAnchorEl) && extraMenuPathname === routerLocation.pathname;
+  const mobileExtraOpen = extraActive
+    ? mobileExtraOpenWhenActive
+    : mobileExtraOpenWhenInactive;
 
   const cancelExtraClose = useCallback(() => {
     if (extraCloseTimerRef.current) {
@@ -189,14 +197,6 @@ const AppHeader = () => {
       setExtraAnchorEl(null);
     }, 140);
   }, [cancelExtraClose]);
-
-  useEffect(() => {
-    if (extraActive) setMobileExtraOpen(true);
-  }, [extraActive]);
-
-  useEffect(() => {
-    closeExtraMenu();
-  }, [routerLocation.pathname, closeExtraMenu]);
 
   useEffect(() => {
     if (!extraMenuOpen) return;
@@ -426,12 +426,18 @@ const AppHeader = () => {
               className={extraActive ? "active" : undefined}
               onMouseEnter={(e) => {
                 cancelExtraClose();
+                setExtraMenuPathname(routerLocation.pathname);
                 setExtraAnchorEl(e.currentTarget);
               }}
               onMouseLeave={scheduleExtraClose}
               onClick={(e) => {
                 cancelExtraClose();
-                setExtraAnchorEl((prev) => (prev ? null : e.currentTarget));
+                if (extraMenuOpen) {
+                  closeExtraMenu();
+                  return;
+                }
+                setExtraMenuPathname(routerLocation.pathname);
+                setExtraAnchorEl(e.currentTarget);
               }}
               aria-haspopup="menu"
               aria-expanded={extraMenuOpen ? "true" : undefined}
@@ -553,7 +559,15 @@ const AppHeader = () => {
                   );
                 })}
 
-                <ListItemButton onClick={() => setMobileExtraOpen((v) => !v)}>
+                <ListItemButton
+                  onClick={() => {
+                    if (extraActive) {
+                      setMobileExtraOpenWhenActive((v) => !v);
+                      return;
+                    }
+                    setMobileExtraOpenWhenInactive((v) => !v);
+                  }}
+                >
                   <ListItemText
                     primary="Extra"
                     primaryTypographyProps={{
