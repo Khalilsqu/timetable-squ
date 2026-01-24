@@ -328,8 +328,8 @@ export default function CommonSlot() {
                 if (v) handleViewChange(v);
               }}
             >
-              <ToggleButton value="schedule">Schedule</ToggleButton>
-              <ToggleButton value="table">Table</ToggleButton>
+              <ToggleButton value="schedule">Schedule View</ToggleButton>
+              <ToggleButton value="table">Table View</ToggleButton>
             </ToggleButtonGroup>
 
             <ToggleButtonGroup
@@ -462,20 +462,6 @@ export default function CommonSlot() {
               />
             )}
           </Box>
-
-          <ToggleButtonGroup
-            size="small"
-            color="primary"
-            value={view}
-            exclusive
-            onChange={(_, v: CommonSlotView | null) => {
-              if (v) handleViewChange(v);
-            }}
-            sx={{ alignSelf: "flex-start", mt: -1 }}
-          >
-            <ToggleButton value="schedule">Schedule View</ToggleButton>
-            <ToggleButton value="table">Table View</ToggleButton>
-          </ToggleButtonGroup>
         </Paper>
 
         <Box sx={{ position: "relative", minHeight: 400 }}>
