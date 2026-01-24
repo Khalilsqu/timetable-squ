@@ -41,6 +41,7 @@ export default function SectionSearch({
               o.label.toUpperCase().includes(state.inputValue.toUpperCase())
             )
       }
+      noOptionsText="Please start typing to view course list"
       renderOption={(props, option) => {
         const reason = getConflictReason(option, chosen);
         const timeSlots = option.slots

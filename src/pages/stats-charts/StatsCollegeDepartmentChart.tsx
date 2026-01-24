@@ -17,6 +17,7 @@ import {
   type StatsBaseData,
   type StatsThemeTokens,
 } from "./statsData";
+import MyCustomSpinner from "@/src/components/MyCustomSpinner";
 
 export default function StatsCollegeDepartmentChart({
   base,
@@ -191,11 +192,7 @@ export default function StatsCollegeDepartmentChart({
         </ToggleButtonGroup>
       </Box>
 
-      {isLoading && (
-        <Typography variant="body2" color="text.secondary">
-          Loading...
-        </Typography>
-      )}
+      {isLoading && <MyCustomSpinner label="Calculating statistics..." />}
       {!isLoading && error != null && (
         <Typography variant="body2" color="error">
           Failed to load data: {String(error)}

@@ -4,6 +4,7 @@ import type { BarSeriesOption } from "echarts/charts";
 import StatsEChart from "./StatsEChart";
 import { insideCountLabel, type StatsChartOption } from "./statsEcharts";
 import { calcMinWidth, type StatsBaseData, type StatsThemeTokens } from "./statsData";
+import MyCustomSpinner from "@/src/components/MyCustomSpinner";
 
 export default function StatsCollegeEnrollmentChart({
   base,
@@ -102,11 +103,7 @@ export default function StatsCollegeEnrollmentChart({
         borderRadius: 3,
       }}
     >
-      {isLoading && (
-        <Typography variant="body2" color="text.secondary">
-          Loading...
-        </Typography>
-      )}
+      {isLoading && <MyCustomSpinner label="Calculating statistics..." />}
       {!isLoading && error != null && (
         <Typography variant="body2" color="error">
           Failed to load data: {String(error)}

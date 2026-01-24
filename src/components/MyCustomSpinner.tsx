@@ -1,7 +1,13 @@
 // src/components/MyCustomSpinner.tsx
 import { Box, CircularProgress, Typography, useTheme } from "@mui/material";
 
-const MyCustomSpinner = () => {
+interface MyCustomSpinnerProps {
+  label?: string;
+}
+
+const MyCustomSpinner = ({
+  label = "Wait, fetching data from database...",
+}: MyCustomSpinnerProps) => {
   const theme = useTheme();
 
   return (
@@ -28,7 +34,7 @@ const MyCustomSpinner = () => {
         variant="subtitle1"
         sx={{ mt: 2, color: theme.palette.text.secondary }}
       >
-        Wait, fetching data from database…
+        {label}
       </Typography>
     </Box>
   );
