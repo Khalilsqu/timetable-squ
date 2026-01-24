@@ -9,6 +9,15 @@ export type StatsThemeTokens = {
   titleColor: string;
 };
 
+export type LevelKey = "ug" | "pg";
+
+export const LEVEL_KEYS: LevelKey[] = ["ug", "pg"];
+
+export const LEVEL_LABELS: Record<LevelKey, string> = {
+  ug: "UG",
+  pg: "PG",
+};
+
 export type StatsBaseData = {
   collegeKeys: string[];
   colleges: string[];
@@ -18,11 +27,27 @@ export type StatsBaseData = {
   displaySemesterByKey: Map<string, string>;
 
   coursesByCollegeBySem: Map<string, Map<string, Set<string>>>;
+  coursesByCollegeBySemLevel: Map<
+    string,
+    Map<string, Map<LevelKey, Set<string>>>
+  >;
   enrollmentByCollegeBySem: Map<string, Map<string, number>>;
+  enrollmentByCollegeBySemLevel: Map<
+    string,
+    Map<string, Map<LevelKey, number>>
+  >;
 
   displayDeptByCollegeByKey: Map<string, Map<string, string>>;
   uniqueCoursesByCollegeDeptSem: Map<string, Map<string, Map<string, Set<string>>>>; // college -> dept -> sem -> courses
+  uniqueCoursesByCollegeDeptSemLevel: Map<
+    string,
+    Map<string, Map<string, Map<LevelKey, Set<string>>>>
+  >; // college -> dept -> sem -> level -> courses
   enrollmentByCollegeDeptSem: Map<string, Map<string, Map<string, number>>>; // college -> dept -> sem -> enrollment
+  enrollmentByCollegeDeptSemLevel: Map<
+    string,
+    Map<string, Map<string, Map<LevelKey, number>>>
+  >; // college -> dept -> sem -> level -> enrollment
 };
 
 export const normalizeKey = (v: unknown) =>
@@ -37,6 +62,27 @@ export const toNumber = (v: unknown): number => {
   const n = Number(String(v).replace(/,/g, "").trim());
   return Number.isFinite(n) ? n : 0;
 };
+
+export function normalizeLevel(v: unknown): LevelKey | null {
+  const raw = String(v ?? "").trim().toLowerCase();
+  if (!raw) return null;
+  if (raw === "ug" || raw.startsWith("undergrad") || raw.includes("undergraduate")) {
+    return "ug";
+  }
+  if (
+    raw === "pg" ||
+    raw.startsWith("postgrad") ||
+    raw.includes("postgraduate") ||
+    raw.includes("graduate") ||
+    raw.includes("masters") ||
+    raw.includes("master") ||
+    raw.includes("phd") ||
+    raw.includes("doctor")
+  ) {
+    return "pg";
+  }
+  return null;
+}
 
 export function calcMinWidth(
   categoryCount: number,
@@ -96,9 +142,17 @@ export function buildStatsBase(
   const displayDeptByCollegeByKey = new Map<string, Map<string, string>>();
 
   const coursesByCollegeBySem = new Map<string, Map<string, Set<string>>>();
+  const coursesByCollegeBySemLevel = new Map<
+    string,
+    Map<string, Map<LevelKey, Set<string>>>
+  >();
   const uniqueCoursesByCollegeDeptSem = new Map<
     string,
     Map<string, Map<string, Set<string>>>
+  >();
+  const uniqueCoursesByCollegeDeptSemLevel = new Map<
+    string,
+    Map<string, Map<string, Map<LevelKey, Set<string>>>>
   >();
 
   const sectionEnrollmentByKey = new Map<
@@ -109,6 +163,7 @@ export function buildStatsBase(
       departmentKey: string;
       courseKey: string;
       enrollment: number;
+      levelKey: LevelKey | null;
     }
   >();
 
@@ -125,6 +180,7 @@ export function buildStatsBase(
     const departmentKey = normalizeKey(departmentRaw);
     const semesterKey = normalizeKey(semesterRaw);
     const courseKey = normalizeKey(courseRaw);
+    const levelKey = normalizeLevel(row.level);
 
     if (!displayCollegeByKey.has(collegeKey)) {
       displayCollegeByKey.set(collegeKey, collegeRaw);
@@ -154,6 +210,24 @@ export function buildStatsBase(
       bySemCollege.set(semesterKey, collegeCourseSet);
     }
     collegeCourseSet.add(courseKey);
+    if (levelKey) {
+      let bySemCollegeLevel = coursesByCollegeBySemLevel.get(collegeKey);
+      if (!bySemCollegeLevel) {
+        bySemCollegeLevel = new Map();
+        coursesByCollegeBySemLevel.set(collegeKey, bySemCollegeLevel);
+      }
+      let byLevel = bySemCollegeLevel.get(semesterKey);
+      if (!byLevel) {
+        byLevel = new Map();
+        bySemCollegeLevel.set(semesterKey, byLevel);
+      }
+      let collegeCourseLevelSet = byLevel.get(levelKey);
+      if (!collegeCourseLevelSet) {
+        collegeCourseLevelSet = new Set();
+        byLevel.set(levelKey, collegeCourseLevelSet);
+      }
+      collegeCourseLevelSet.add(courseKey);
+    }
 
     // Unique courses per department per semester within a college
     let byDept = uniqueCoursesByCollegeDeptSem.get(collegeKey);
@@ -172,6 +246,29 @@ export function buildStatsBase(
       bySemDept.set(semesterKey, deptCourseSet);
     }
     deptCourseSet.add(courseKey);
+    if (levelKey) {
+      let byDeptLevel = uniqueCoursesByCollegeDeptSemLevel.get(collegeKey);
+      if (!byDeptLevel) {
+        byDeptLevel = new Map();
+        uniqueCoursesByCollegeDeptSemLevel.set(collegeKey, byDeptLevel);
+      }
+      let bySemDeptLevel = byDeptLevel.get(departmentKey);
+      if (!bySemDeptLevel) {
+        bySemDeptLevel = new Map();
+        byDeptLevel.set(departmentKey, bySemDeptLevel);
+      }
+      let byLevel = bySemDeptLevel.get(semesterKey);
+      if (!byLevel) {
+        byLevel = new Map();
+        bySemDeptLevel.set(semesterKey, byLevel);
+      }
+      let deptCourseLevelSet = byLevel.get(levelKey);
+      if (!deptCourseLevelSet) {
+        deptCourseLevelSet = new Set();
+        byLevel.set(levelKey, deptCourseLevelSet);
+      }
+      deptCourseLevelSet.add(courseKey);
+    }
 
     // Enrollment: dedupe sessions within the same section (take max enrollment seen)
     const sectionRaw = String(row.section ?? "").trim();
@@ -195,9 +292,11 @@ export function buildStatsBase(
         departmentKey,
         courseKey,
         enrollment,
+        levelKey,
       });
-    } else if (enrollment > prev.enrollment) {
-      prev.enrollment = enrollment;
+    } else {
+      if (enrollment > prev.enrollment) prev.enrollment = enrollment;
+      if (!prev.levelKey && levelKey) prev.levelKey = levelKey;
     }
   }
 
@@ -210,11 +309,25 @@ export function buildStatsBase(
 
   // Enrollment per department: section -> course -> department
   const courseTotals = new Map<string, number>(); // semester|college|dept|course -> total
+  const courseTotalsByLevel = new Map<string, number>(); // semester|college|dept|course|level -> total
   for (const s of sectionEnrollmentByKey.values()) {
     const courseId = [s.semesterKey, s.collegeKey, s.departmentKey, s.courseKey].join(
       SEP
     );
     courseTotals.set(courseId, (courseTotals.get(courseId) ?? 0) + s.enrollment);
+    if (s.levelKey) {
+      const courseLevelId = [
+        s.semesterKey,
+        s.collegeKey,
+        s.departmentKey,
+        s.courseKey,
+        s.levelKey,
+      ].join(SEP);
+      courseTotalsByLevel.set(
+        courseLevelId,
+        (courseTotalsByLevel.get(courseLevelId) ?? 0) + s.enrollment
+      );
+    }
   }
 
   const deptTotals = new Map<string, number>(); // semester|college|dept -> total
@@ -224,10 +337,26 @@ export function buildStatsBase(
     deptTotals.set(deptId, (deptTotals.get(deptId) ?? 0) + total);
   }
 
+  const deptTotalsByLevel = new Map<string, number>(); // semester|college|dept|level -> total
+  for (const [courseLevelId, total] of courseTotalsByLevel) {
+    const [semesterKey, collegeKey, departmentKey, _courseKey, levelKey] =
+      courseLevelId.split(SEP);
+    const deptId = [semesterKey, collegeKey, departmentKey, levelKey].join(SEP);
+    deptTotalsByLevel.set(deptId, (deptTotalsByLevel.get(deptId) ?? 0) + total);
+  }
+
   const enrollmentByCollegeBySem = new Map<string, Map<string, number>>();
+  const enrollmentByCollegeBySemLevel = new Map<
+    string,
+    Map<string, Map<LevelKey, number>>
+  >();
   const enrollmentByCollegeDeptSem = new Map<
     string,
     Map<string, Map<string, number>>
+  >();
+  const enrollmentByCollegeDeptSemLevel = new Map<
+    string,
+    Map<string, Map<string, Map<LevelKey, number>>>
   >();
 
   for (const [deptId, total] of deptTotals) {
@@ -255,6 +384,41 @@ export function buildStatsBase(
     bySemDept.set(semesterKey, (bySemDept.get(semesterKey) ?? 0) + total);
   }
 
+  for (const [deptLevelId, total] of deptTotalsByLevel) {
+    const [semesterKey, collegeKey, departmentKey, levelKeyRaw] =
+      deptLevelId.split(SEP);
+    const levelKey = levelKeyRaw as LevelKey;
+
+    let bySemCollege = enrollmentByCollegeBySemLevel.get(collegeKey);
+    if (!bySemCollege) {
+      bySemCollege = new Map();
+      enrollmentByCollegeBySemLevel.set(collegeKey, bySemCollege);
+    }
+    let byLevelCollege = bySemCollege.get(semesterKey);
+    if (!byLevelCollege) {
+      byLevelCollege = new Map();
+      bySemCollege.set(semesterKey, byLevelCollege);
+    }
+    byLevelCollege.set(levelKey, (byLevelCollege.get(levelKey) ?? 0) + total);
+
+    let byDept = enrollmentByCollegeDeptSemLevel.get(collegeKey);
+    if (!byDept) {
+      byDept = new Map();
+      enrollmentByCollegeDeptSemLevel.set(collegeKey, byDept);
+    }
+    let bySemDept = byDept.get(departmentKey);
+    if (!bySemDept) {
+      bySemDept = new Map();
+      byDept.set(departmentKey, bySemDept);
+    }
+    let byLevelDept = bySemDept.get(semesterKey);
+    if (!byLevelDept) {
+      byLevelDept = new Map();
+      bySemDept.set(semesterKey, byLevelDept);
+    }
+    byLevelDept.set(levelKey, (byLevelDept.get(levelKey) ?? 0) + total);
+  }
+
   return {
     collegeKeys,
     colleges,
@@ -262,10 +426,14 @@ export function buildStatsBase(
     semesterKeys,
     displaySemesterByKey,
     coursesByCollegeBySem,
+    coursesByCollegeBySemLevel,
     enrollmentByCollegeBySem,
+    enrollmentByCollegeBySemLevel,
     displayDeptByCollegeByKey,
     uniqueCoursesByCollegeDeptSem,
+    uniqueCoursesByCollegeDeptSemLevel,
     enrollmentByCollegeDeptSem,
+    enrollmentByCollegeDeptSemLevel,
   };
 }
 

@@ -2,7 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import {
   Autocomplete,
   Box,
+  FormControlLabel,
   Paper,
+  Switch,
   TextField,
   ToggleButton,
   ToggleButtonGroup,
@@ -10,10 +12,18 @@ import {
 } from "@mui/material";
 import type { BarSeriesOption } from "echarts/charts";
 import StatsEChart from "./StatsEChart";
-import { insideCountLabel, type StatsChartOption } from "./statsEcharts";
+import {
+  absValueFormatter,
+  colorForIndex,
+  insideCountLabel,
+  insideCountLabelAbs,
+  splitLevelTooltipFormatter,
+  type StatsChartOption,
+} from "./statsEcharts";
 import {
   calcMinWidth,
   getCollegeOptions,
+  LEVEL_KEYS,
   type StatsBaseData,
   type StatsThemeTokens,
 } from "./statsData";
@@ -38,6 +48,7 @@ export default function StatsCollegeDepartmentChart({
   const [metric, setMetric] = useState<"uniqueCourses" | "enrollment">(
     "uniqueCourses"
   );
+  const [splitByLevel, setSplitByLevel] = useState(false);
 
   useEffect(() => {
     if (collegeOptions.length === 0) return;
@@ -64,29 +75,80 @@ export default function StatsCollegeDepartmentChart({
     const useDataZoom = departments.length > 10;
     const minWidth = calcMinWidth(departments.length);
 
-    const series: BarSeriesOption[] = base.semesterKeys.map((semKey) => ({
-      name: base.displaySemesterByKey.get(semKey) ?? semKey,
-      type: "bar",
-      emphasis: { focus: "series" },
-      label: insideCountLabel(),
-      labelLayout: { hideOverlap: true },
-      data: deptKeys.map((deptKey) => {
-        if (metric === "uniqueCourses") {
-          return (
-            base.uniqueCoursesByCollegeDeptSem
-              .get(selectedCollegeKey)
-              ?.get(deptKey)
-              ?.get(semKey)?.size ?? 0
-          );
-        }
-        return (
-          base.enrollmentByCollegeDeptSem
-            .get(selectedCollegeKey)
-            ?.get(deptKey)
-            ?.get(semKey) ?? 0
-        );
-      }),
-    }));
+    const semesterLabels = base.semesterKeys.map(
+      (key) => base.displaySemesterByKey.get(key) ?? key
+    );
+    const semesterLabelByKey = new Map(
+      base.semesterKeys.map((key, index) => [
+        key,
+        semesterLabels[index] ?? key,
+      ])
+    );
+    const semesterColors = new Map(
+      base.semesterKeys.map((key, index) => [key, colorForIndex(index)])
+    );
+
+    const splitLabel = (levelKey: "ug" | "pg") => ({
+      ...insideCountLabelAbs(),
+      position: levelKey === "pg" ? "insideBottom" : "insideTop",
+      distance: 2,
+    });
+
+    const series: BarSeriesOption[] = splitByLevel
+      ? base.semesterKeys.flatMap((semKey) =>
+          LEVEL_KEYS.map((levelKey) => ({
+            name: semesterLabelByKey.get(semKey) ?? semKey,
+            type: "bar",
+            stack: semKey,
+            emphasis: { focus: "series" },
+            label: splitLabel(levelKey),
+            labelLayout: { hideOverlap: true },
+            itemStyle: { color: semesterColors.get(semKey) },
+            data: deptKeys.map((deptKey) => {
+              const sign = levelKey === "pg" ? -1 : 1;
+              if (metric === "uniqueCourses") {
+                const value =
+                  base.uniqueCoursesByCollegeDeptSemLevel
+                    .get(selectedCollegeKey)
+                    ?.get(deptKey)
+                    ?.get(semKey)
+                    ?.get(levelKey)?.size ?? 0;
+                return value * sign;
+              }
+              const value =
+                base.enrollmentByCollegeDeptSemLevel
+                  .get(selectedCollegeKey)
+                  ?.get(deptKey)
+                  ?.get(semKey)
+                  ?.get(levelKey) ?? 0;
+              return value * sign;
+            }),
+          }))
+        )
+      : base.semesterKeys.map((semKey) => ({
+          name: semesterLabelByKey.get(semKey) ?? semKey,
+          type: "bar",
+          emphasis: { focus: "series" },
+          label: insideCountLabel(),
+          labelLayout: { hideOverlap: true },
+          itemStyle: { color: semesterColors.get(semKey) },
+          data: deptKeys.map((deptKey) => {
+            if (metric === "uniqueCourses") {
+              return (
+                base.uniqueCoursesByCollegeDeptSem
+                  .get(selectedCollegeKey)
+                  ?.get(deptKey)
+                  ?.get(semKey)?.size ?? 0
+              );
+            }
+            return (
+              base.enrollmentByCollegeDeptSem
+                .get(selectedCollegeKey)
+                ?.get(deptKey)
+                ?.get(semKey) ?? 0
+            );
+          }),
+        }));
 
     const collegeLabel =
       base.displayCollegeByKey.get(selectedCollegeKey) ?? selectedCollegeKey;
@@ -95,6 +157,78 @@ export default function StatsCollegeDepartmentChart({
       metric === "uniqueCourses"
         ? "unique-courses-by-department"
         : "enrollment-by-department";
+
+    const tooltip = splitByLevel
+      ? {
+          trigger: "axis",
+          axisPointer: { type: "shadow" },
+          formatter: splitLevelTooltipFormatter,
+        }
+      : { trigger: "axis", axisPointer: { type: "shadow" } };
+
+    const yValues = splitByLevel
+      ? series.flatMap((entry) =>
+          Array.isArray(entry.data) ? entry.data.map((value) => Number(value) || 0) : []
+        )
+      : [];
+    const yMin = splitByLevel && yValues.length ? Math.min(0, ...yValues) : undefined;
+    const yMax = splitByLevel && yValues.length ? Math.max(0, ...yValues) : undefined;
+    const labelWidth = 36;
+    const yAxisLabel = splitByLevel
+      ? {
+          margin: 6,
+          color: theme.axisTickLabelColor,
+          fontSize: 12,
+          align: "right",
+          width: labelWidth,
+          overflow: "truncate",
+          showMinLabel: true,
+          showMaxLabel: true,
+          formatter: (value: number) => {
+            const numeric = Number(value);
+            const absValue = absValueFormatter(numeric);
+            if (yMax !== undefined && numeric === yMax) {
+              return `{levelUG|UG}\n{value|${absValue}}`;
+            }
+            if (yMin !== undefined && numeric === yMin) {
+              return `{value|${absValue}}\n{levelPG|PG}`;
+            }
+            return `{value|${absValue}}`;
+          },
+          rich: {
+            levelUG: {
+              fontWeight: 700,
+              color: theme.axisTickLabelColor,
+              align: "left",
+              width: labelWidth,
+              lineHeight: 14,
+              padding: [0, 0, 20, 20],
+            },
+            levelPG: {
+              fontWeight: 700,
+              color: theme.axisTickLabelColor,
+              align: "left",
+              width: labelWidth,
+              lineHeight: 14,
+              padding: [20, 0, 0, 20],
+            },
+            value: {
+              color: theme.axisTickLabelColor,
+              align: "right",
+              width: labelWidth,
+            },
+          },
+        }
+      : { margin: 10, color: theme.axisTickLabelColor, fontSize: 12 };
+    const yAxis = {
+      type: "value",
+      axisLine: { lineStyle: { color: theme.gridLineColor } },
+      axisTick: { lineStyle: { color: theme.gridLineColor } },
+      splitLine: { lineStyle: { color: theme.gridLineColor } },
+      axisLabel: yAxisLabel,
+      ...(yMin !== undefined ? { min: yMin } : {}),
+      ...(yMax !== undefined ? { max: yMax } : {}),
+    };
 
     const option: StatsChartOption = {
       backgroundColor: "transparent",
@@ -115,8 +249,8 @@ export default function StatsCollegeDepartmentChart({
         iconStyle: { borderColor: theme.axisTextColor },
         emphasis: { iconStyle: { borderColor: theme.titleColor } },
       },
-      tooltip: { trigger: "axis", axisPointer: { type: "shadow" } },
-      legend: { top: 28, textStyle: { color: theme.axisTextColor } },
+      tooltip,
+      legend: { top: 28, textStyle: { color: theme.axisTextColor }, data: semesterLabels },
       grid: {
         left: 24,
         right: 16,
@@ -138,13 +272,7 @@ export default function StatsCollegeDepartmentChart({
           formatter: (value: string) => value.split(" ").join("\n"),
         },
       },
-      yAxis: {
-        type: "value",
-        axisLine: { lineStyle: { color: theme.gridLineColor } },
-        axisTick: { lineStyle: { color: theme.gridLineColor } },
-        splitLine: { lineStyle: { color: theme.gridLineColor } },
-        axisLabel: { margin: 10, color: theme.axisTickLabelColor, fontSize: 12 },
-      },
+      yAxis,
       dataZoom: useDataZoom
         ? [
             { type: "inside", xAxisIndex: 0 },
@@ -155,7 +283,7 @@ export default function StatsCollegeDepartmentChart({
     };
 
     return { option, minWidth };
-  }, [base, selectedCollegeKey, metric, theme]);
+  }, [base, selectedCollegeKey, metric, splitByLevel, theme]);
 
   return (
     <Paper
@@ -181,15 +309,27 @@ export default function StatsCollegeDepartmentChart({
           renderInput={(p) => <TextField {...p} label="College" />}
           sx={{ minWidth: 280 }}
         />
-        <ToggleButtonGroup
-          size="small"
-          exclusive
-          value={metric}
-          onChange={(_, v) => v && setMetric(v)}
-        >
-          <ToggleButton value="uniqueCourses">Unique courses</ToggleButton>
-          <ToggleButton value="enrollment">Enrollment</ToggleButton>
-        </ToggleButtonGroup>
+        <Box display="flex" alignItems="center" gap={1.5} sx={{ ml: "auto" }}>
+          <ToggleButtonGroup
+            size="small"
+            exclusive
+            value={metric}
+            onChange={(_, v) => v && setMetric(v)}
+          >
+            <ToggleButton value="uniqueCourses">Unique courses</ToggleButton>
+            <ToggleButton value="enrollment">Enrollment</ToggleButton>
+          </ToggleButtonGroup>
+          <FormControlLabel
+            control={
+              <Switch
+                size="small"
+                checked={splitByLevel}
+                onChange={(_, checked) => setSplitByLevel(checked)}
+              />
+            }
+            label="Split By Level"
+          />
+        </Box>
       </Box>
 
       {isLoading && <MyCustomSpinner label="Calculating statistics..." />}
