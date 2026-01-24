@@ -10,6 +10,7 @@ import {
   splitLevelTooltipFormatter,
   type StatsChartOption,
 } from "./statsEcharts";
+import type { YAXisOption } from "echarts/types/src/coord/cartesian/AxisModel.js";
 import {
   LEVEL_KEYS,
   calcMinWidth,
@@ -49,7 +50,9 @@ export default function StatsCollegeUniqueCoursesChart({
       base.semesterKeys.map((key, index) => [key, colorForIndex(index)])
     );
 
-    const splitLabel = (levelKey: "ug" | "pg") => ({
+    const splitLabel = (
+      levelKey: "ug" | "pg"
+    ): NonNullable<BarSeriesOption["label"]> => ({
       ...insideCountLabelAbs(),
       position: levelKey === "pg" ? "insideBottom" : "insideTop",
       distance: 2,
@@ -96,7 +99,7 @@ export default function StatsCollegeUniqueCoursesChart({
     const yMin = splitByLevel && yValues.length ? Math.min(0, ...yValues) : undefined;
     const yMax = splitByLevel && yValues.length ? Math.max(0, ...yValues) : undefined;
     const labelWidth = 36;
-    const yAxisLabel = splitByLevel
+    const yAxisLabel: NonNullable<YAXisOption["axisLabel"]> = splitByLevel
       ? {
           margin: 6,
           color: theme.axisTickLabelColor,
@@ -142,7 +145,7 @@ export default function StatsCollegeUniqueCoursesChart({
           },
         }
       : { margin: 10, color: theme.axisTickLabelColor, fontSize: 12 };
-    const yAxis = {
+    const yAxis: YAXisOption = {
       type: "value",
       axisLine: { lineStyle: { color: theme.gridLineColor } },
       axisTick: { lineStyle: { color: theme.gridLineColor } },
@@ -154,11 +157,11 @@ export default function StatsCollegeUniqueCoursesChart({
 
     const tooltip = splitByLevel
       ? {
-          trigger: "axis",
-          axisPointer: { type: "shadow" },
+          trigger: "axis" as const,
+          axisPointer: { type: "shadow" as const },
           formatter: splitLevelTooltipFormatter,
         }
-      : { trigger: "axis", axisPointer: { type: "shadow" } };
+      : { trigger: "axis" as const, axisPointer: { type: "shadow" as const } };
 
     const option: StatsChartOption = {
       backgroundColor: "transparent",

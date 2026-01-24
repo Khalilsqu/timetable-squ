@@ -339,7 +339,7 @@ export function buildStatsBase(
 
   const deptTotalsByLevel = new Map<string, number>(); // semester|college|dept|level -> total
   for (const [courseLevelId, total] of courseTotalsByLevel) {
-    const [semesterKey, collegeKey, departmentKey, _courseKey, levelKey] =
+    const [semesterKey, collegeKey, departmentKey, , levelKey] =
       courseLevelId.split(SEP);
     const deptId = [semesterKey, collegeKey, departmentKey, levelKey].join(SEP);
     deptTotalsByLevel.set(deptId, (deptTotalsByLevel.get(deptId) ?? 0) + total);

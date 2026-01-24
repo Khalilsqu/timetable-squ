@@ -1,6 +1,13 @@
 import * as echarts from "echarts/core";
 import type { ComposeOption } from "echarts/core";
-import { BarChart, type BarSeriesOption } from "echarts/charts";
+import {
+  BarChart,
+  CustomChart,
+  HeatmapChart,
+  type BarSeriesOption,
+  type CustomSeriesOption,
+  type HeatmapSeriesOption,
+} from "echarts/charts";
 import {
   DataZoomComponent,
   type DataZoomComponentOption,
@@ -14,28 +21,36 @@ import {
   type ToolboxComponentOption,
   TooltipComponent,
   type TooltipComponentOption,
+  VisualMapComponent,
+  type VisualMapComponentOption,
 } from "echarts/components";
 import { CanvasRenderer } from "echarts/renderers";
 
 echarts.use([
   BarChart,
+  CustomChart,
+  HeatmapChart,
   GridComponent,
   TooltipComponent,
   LegendComponent,
   DataZoomComponent,
   TitleComponent,
   ToolboxComponent,
+  VisualMapComponent,
   CanvasRenderer,
 ]);
 
 export type StatsChartOption = ComposeOption<
   | BarSeriesOption
+  | CustomSeriesOption
+  | HeatmapSeriesOption
   | GridComponentOption
   | TooltipComponentOption
   | LegendComponentOption
   | DataZoomComponentOption
   | TitleComponentOption
   | ToolboxComponentOption
+  | VisualMapComponentOption
 >;
 
 export function insideCountLabel(): NonNullable<BarSeriesOption["label"]> {
@@ -74,26 +89,28 @@ export function absValueFormatter(value: unknown): string {
   return String(Math.abs(n));
 }
 
-type TooltipParam = {
-  axisValueLabel?: string;
-  axisValue?: string;
-  name?: string;
-  marker?: string;
-  seriesName?: string;
-  value?: unknown;
-};
-
-export function splitLevelTooltipFormatter(params: TooltipParam | TooltipParam[]): string {
+export function splitLevelTooltipFormatter(params: unknown): string {
   const items = Array.isArray(params) ? params : [params];
   if (!items.length) return "";
-  const header =
-    items[0].axisValueLabel ?? items[0].axisValue ?? items[0].name ?? "";
-  const lines = items.map((item) => {
+
+  const first =
+    items[0] && typeof items[0] === "object"
+      ? (items[0] as Record<string, unknown>)
+      : {};
+  const headerRaw = first.axisValueLabel ?? first.axisValue ?? first.name ?? "";
+  const header = String(headerRaw ?? "");
+
+  const lines = items.map((raw) => {
+    const item =
+      raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
     const value = Number(item.value);
     const levelLabel = value < 0 ? "PG" : "UG";
     const displayValue = absValueFormatter(value);
-    return `${item.marker ?? ""}${item.seriesName ?? ""} ${levelLabel}: ${displayValue}`;
+    const marker = typeof item.marker === "string" ? item.marker : "";
+    const seriesName = String(item.seriesName ?? "");
+    return `${marker}${seriesName} ${levelLabel}: ${displayValue}`;
   });
+
   return [header, ...lines].join("<br/>");
 }
 

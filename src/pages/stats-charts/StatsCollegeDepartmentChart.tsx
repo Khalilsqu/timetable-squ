@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import {
   Autocomplete,
   Box,
@@ -28,6 +28,8 @@ import {
   type StatsThemeTokens,
 } from "./statsData";
 import MyCustomSpinner from "@/src/components/MyCustomSpinner";
+import { useStatsStore } from "@/src/stores/statsStore";
+import type { YAXisOption } from "echarts/types/src/coord/cartesian/AxisModel.js";
 
 export default function StatsCollegeDepartmentChart({
   base,
@@ -42,13 +44,12 @@ export default function StatsCollegeDepartmentChart({
 }) {
   const collegeOptions = useMemo(() => getCollegeOptions(base), [base]);
 
-  const [selectedCollegeKey, setSelectedCollegeKey] = useState<string | null>(
-    null
-  );
-  const [metric, setMetric] = useState<"uniqueCourses" | "enrollment">(
-    "uniqueCourses"
-  );
-  const [splitByLevel, setSplitByLevel] = useState(false);
+  const selectedCollegeKey = useStatsStore((s) => s.deptCollegeKey);
+  const setSelectedCollegeKey = useStatsStore((s) => s.setDeptCollegeKey);
+  const metric = useStatsStore((s) => s.deptMetric);
+  const setMetric = useStatsStore((s) => s.setDeptMetric);
+  const splitByLevel = useStatsStore((s) => s.deptSplitByLevel);
+  const setSplitByLevel = useStatsStore((s) => s.setDeptSplitByLevel);
 
   useEffect(() => {
     if (collegeOptions.length === 0) return;
@@ -59,7 +60,7 @@ export default function StatsCollegeDepartmentChart({
     if (!collegeOptions.some((o) => o.key === selectedCollegeKey)) {
       setSelectedCollegeKey(collegeOptions[0].key);
     }
-  }, [collegeOptions, selectedCollegeKey]);
+  }, [collegeOptions, selectedCollegeKey, setSelectedCollegeKey]);
 
   const { option, minWidth } = useMemo(() => {
     if (!base || !selectedCollegeKey) {
@@ -88,7 +89,9 @@ export default function StatsCollegeDepartmentChart({
       base.semesterKeys.map((key, index) => [key, colorForIndex(index)])
     );
 
-    const splitLabel = (levelKey: "ug" | "pg") => ({
+    const splitLabel = (
+      levelKey: "ug" | "pg"
+    ): NonNullable<BarSeriesOption["label"]> => ({
       ...insideCountLabelAbs(),
       position: levelKey === "pg" ? "insideBottom" : "insideTop",
       distance: 2,
@@ -160,11 +163,11 @@ export default function StatsCollegeDepartmentChart({
 
     const tooltip = splitByLevel
       ? {
-          trigger: "axis",
-          axisPointer: { type: "shadow" },
+          trigger: "axis" as const,
+          axisPointer: { type: "shadow" as const },
           formatter: splitLevelTooltipFormatter,
         }
-      : { trigger: "axis", axisPointer: { type: "shadow" } };
+      : { trigger: "axis" as const, axisPointer: { type: "shadow" as const } };
 
     const yValues = splitByLevel
       ? series.flatMap((entry) =>
@@ -174,7 +177,7 @@ export default function StatsCollegeDepartmentChart({
     const yMin = splitByLevel && yValues.length ? Math.min(0, ...yValues) : undefined;
     const yMax = splitByLevel && yValues.length ? Math.max(0, ...yValues) : undefined;
     const labelWidth = 36;
-    const yAxisLabel = splitByLevel
+    const yAxisLabel: NonNullable<YAXisOption["axisLabel"]> = splitByLevel
       ? {
           margin: 6,
           color: theme.axisTickLabelColor,
@@ -220,7 +223,7 @@ export default function StatsCollegeDepartmentChart({
           },
         }
       : { margin: 10, color: theme.axisTickLabelColor, fontSize: 12 };
-    const yAxis = {
+    const yAxis: YAXisOption = {
       type: "value",
       axisLine: { lineStyle: { color: theme.gridLineColor } },
       axisTick: { lineStyle: { color: theme.gridLineColor } },
