@@ -3,8 +3,7 @@ import { Box } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { useScheduleRows, useSemesters } from "@/src/lib/queries";
 import StatsCollegeDepartmentChart from "./stats-charts/StatsCollegeDepartmentChart";
-import StatsCollegeEnrollmentChart from "./stats-charts/StatsCollegeEnrollmentChart";
-import StatsCollegeUniqueCoursesChart from "./stats-charts/StatsCollegeUniqueCoursesChart";
+import StatsCollegeSummaryChart from "./stats-charts/StatsCollegeSummaryChart";
 import { buildStatsBase, getStatsThemeTokens } from "./stats-charts/statsData";
 
 export default function StatsPage() {
@@ -21,13 +20,7 @@ export default function StatsPage() {
 
   return (
     <Box display="flex" flexDirection="column" gap={2}>
-      <StatsCollegeUniqueCoursesChart
-        base={base}
-        theme={theme}
-        isLoading={isLoading}
-        error={error}
-      />
-      <StatsCollegeEnrollmentChart
+      <StatsCollegeSummaryChart
         base={base}
         theme={theme}
         isLoading={isLoading}
