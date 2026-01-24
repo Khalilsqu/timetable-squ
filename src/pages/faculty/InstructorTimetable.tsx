@@ -70,6 +70,29 @@ export default function InstructorTimetable() {
     return rows.filter((r) => selectedInstructors.includes(norm(r.instructor)));
   }, [rows, selectedInstructors]);
 
+  /* 5.1️⃣  exam view rows: include other session instructors in same section */
+  const examRows = useMemo<SheetRow[]>(() => {
+    if (selectedInstructors.length === 0) return [];
+
+    const sectionKeys = new Set<string>();
+    rows.forEach((r) => {
+      if (!selectedInstructors.includes(norm(r.instructor))) return;
+      const courseCode = String(r.course_code ?? "").trim();
+      if (!courseCode) return;
+      const section = String(r.section ?? "").trim();
+      sectionKeys.add(`${courseCode}__${section || "*"}`);
+    });
+
+    if (sectionKeys.size === 0) return [];
+
+    return rows.filter((r) => {
+      const courseCode = String(r.course_code ?? "").trim();
+      if (!courseCode) return false;
+      const section = String(r.section ?? "").trim();
+      return sectionKeys.has(`${courseCode}__${section || "*"}`);
+    });
+  }, [rows, selectedInstructors]);
+
   /* 6️⃣  loading / error ---------------------------------------------- */
   if (semLoad || rowLoad) return <MyCustomSpinner />;
 
@@ -125,7 +148,7 @@ export default function InstructorTimetable() {
         {selectedInstructors.length > 0 ? (
           showExams ? (
             <FinalExamSchedule
-              data={filtered}
+              data={examRows}
               department={selectedInstructors.join(", ")}
               semester={semester ?? undefined}
             />

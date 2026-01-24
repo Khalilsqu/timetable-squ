@@ -243,58 +243,17 @@ export default function StudentTimetableContent() {
     return out;
   }, [chosen, rows]);
 
-  /* 5️⃣b final exam weekly view rows ---------------------------------- */
-  const finalExamData = useMemo<SheetRow[]>(() => {
-    const chosenCourseCodes = new Set(
-      chosen
-        .map((c) => c.label.split(" (")[0]?.trim())
-        .filter((s): s is string => Boolean(s)),
-    );
-    if (chosenCourseCodes.size === 0) return [];
+  /* 5️⃣b final exam view rows ------------------------------------------- */
+  // Pass all rows for the selected sections so the exam view can show
+  // instructors from other sessions (LEC/LAB) in the same section.
+  const finalExamRows = useMemo<SheetRow[]>(() => {
+    const chosenIds = new Set(chosen.map((c) => c.id));
+    if (chosenIds.size === 0) return [];
 
-    const out: SheetRow[] = [];
-    const seen = new Set<string>();
-
-    rows.forEach((r) => {
-      const courseCode = String(r.course_code ?? "").trim();
-      if (!courseCode || !chosenCourseCodes.has(courseCode)) return;
-
-      const examDate = String(r.exam_date ?? "").trim();
-      const examStart = String(r.exam_start_time ?? "")
-        .trim()
-        .slice(0, 5);
-      const examEnd = String(r.exam_end_time ?? "")
-        .trim()
-        .slice(0, 5);
-
-      if (!examDate || !isHHMM(examStart) || !isHHMM(examEnd)) return;
-
-      const examBuilding = String(r.exam_building ?? "").trim();
-      const examHall = String(r.exam_hall ?? "").trim() || "TBA";
-
-      const uniqueKey = [
-        courseCode,
-        examDate,
-        examStart,
-        examEnd,
-        examBuilding.toLowerCase(),
-        examHall.toLowerCase(),
-      ].join("|");
-      if (seen.has(uniqueKey)) return;
-      seen.add(uniqueKey);
-
-      out.push({
-        ...r,
-        course_code: courseCode,
-        exam_date: examDate,
-        exam_start_time: examStart,
-        exam_end_time: examEnd,
-        exam_building: examBuilding,
-        exam_hall: examHall,
-      } as SheetRow);
+    return rows.filter((r) => {
+      const id = `${String(r.course_code ?? "").trim()}-${String(r.section ?? "").trim()}`;
+      return chosenIds.has(id);
     });
-
-    return out;
   }, [chosen, rows]);
 
   const viewToggle = (
@@ -419,7 +378,7 @@ export default function StudentTimetableContent() {
         )
       ) : (
         <FinalExamSchedule
-          data={finalExamData}
+          data={finalExamRows}
           department="Selected Courses"
           semester={semester}
           headerLeft={viewToggle}

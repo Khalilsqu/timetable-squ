@@ -140,20 +140,55 @@ const AppHeader = () => {
     return () => window.removeEventListener("scroll", onScroll);
   }, [visible, elevated]);
 
-  // header height (keep in sync if you change Toolbar sizing)
-  const APP_HEADER_HEIGHT = 56; // md+ will auto grow if needed
+  // header height
+  const DEFAULT_APP_HEADER_HEIGHT = 56;
+  const appBarRef = useRef<HTMLDivElement | null>(null);
+  const headerHeightRef = useRef(DEFAULT_APP_HEADER_HEIGHT);
+  const visibleRef = useRef(visible);
 
-  // Optional: expose a CSS variable for layout offset (consumer can read)
+  useEffect(() => {
+    visibleRef.current = visible;
+  }, [visible]);
+
+  // Expose a CSS variable for layout offset (consumer can read)
+  useEffect(() => {
+    const el = appBarRef.current;
+    if (!el) return;
+
+    const apply = () => {
+      const height =
+        el.getBoundingClientRect().height || DEFAULT_APP_HEADER_HEIGHT;
+      headerHeightRef.current = height;
+      document.documentElement.style.setProperty(
+        "--app-header-height",
+        `${height}px`,
+      );
+      document.documentElement.style.setProperty(
+        "--app-header-offset",
+        visibleRef.current ? `${height}px` : "0px",
+      );
+    };
+
+    apply();
+
+    const ro = new ResizeObserver(() => apply());
+    ro.observe(el);
+
+    return () => ro.disconnect();
+  }, []);
+
+  // Keep offset adaptive as AppBar hides/shows
   useEffect(() => {
     document.documentElement.style.setProperty(
-      "--app-header-height",
-      `${APP_HEADER_HEIGHT}px`
+      "--app-header-offset",
+      visible ? `${headerHeightRef.current}px` : "0px",
     );
-  }, []);
+  }, [visible]);
 
   return (
     <Fragment>
       <AppBar
+        ref={appBarRef}
         position="fixed"
         elevation={elevated ? 4 : 0}
         className="no-print"
@@ -161,7 +196,7 @@ const AppHeader = () => {
           top: 0,
           left: 0,
           right: 0,
-          height: APP_HEADER_HEIGHT,
+          minHeight: DEFAULT_APP_HEADER_HEIGHT,
           color: (t) =>
             t.palette.mode === "dark"
               ? t.palette.grey[100]
@@ -198,7 +233,7 @@ const AppHeader = () => {
             justifyContent: "space-between",
             px: { xs: 1, sm: 2, md: 3 },
             flexWrap: "wrap",
-            minHeight: APP_HEADER_HEIGHT,
+            minHeight: DEFAULT_APP_HEADER_HEIGHT,
           }}
         >
           {/* mobile menu button */}

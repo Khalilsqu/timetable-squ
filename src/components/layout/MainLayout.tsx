@@ -23,7 +23,6 @@ const MainLayout = () => {
         flexDirection="column"
         minHeight="100vh"
         sx={{
-          overflow: "hidden",
           "@media print": {
             display: "block",
             overflow: "visible !important",
@@ -40,7 +39,6 @@ const MainLayout = () => {
           component="main"
           flex={1}
           sx={{
-            overflow: "hidden",
             p: { xs: 1.5, sm: 2, md: 3 },
             bgcolor: (t) =>
               t.palette.mode === "light"

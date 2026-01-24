@@ -168,6 +168,42 @@ export default function DepartmentTimetable() {
     [filtered, applyRowFilters]
   );
 
+  /* 5.3️⃣  exam view rows: keep section, include all session instructors */
+  const examRows = useMemo<SheetRow[]>(() => {
+    const base = filtered;
+    if (base.length === 0) return [];
+
+    const courseFiltered =
+      selCourses.length === 0
+        ? base
+        : base.filter((r) =>
+            selCourses.includes(String(r.course_code ?? "").trim())
+          );
+
+    const sectionSource =
+      selInstructors.length === 0
+        ? courseFiltered
+        : courseFiltered.filter((r) =>
+            selInstructors.includes(String(r.instructor ?? "").trim())
+          );
+
+    const sectionKeys = new Set<string>();
+    sectionSource.forEach((r) => {
+      const courseCode = String(r.course_code ?? "").trim();
+      if (!courseCode) return;
+      const section = String(r.section ?? "").trim();
+      sectionKeys.add(`${courseCode}__${section || "*"}`);
+    });
+    if (sectionKeys.size === 0) return [];
+
+    return courseFiltered.filter((r) => {
+      const courseCode = String(r.course_code ?? "").trim();
+      if (!courseCode) return false;
+      const section = String(r.section ?? "").trim();
+      return sectionKeys.has(`${courseCode}__${section || "*"}`);
+    });
+  }, [filtered, selCourses, selInstructors]);
+
   /* 5.2.b️⃣ prune selections when options shrink or department changes */
   useEffect(() => {
     if (selInstructors.length) {
@@ -268,7 +304,7 @@ export default function DepartmentTimetable() {
         {selectedOpt ? (
           showExams ? (
             <FinalExamSchedule
-              data={finalFiltered}
+              data={examRows}
               department={selectedOpt.department}
               semester={semester ?? undefined}
             />

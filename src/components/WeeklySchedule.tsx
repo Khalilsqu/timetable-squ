@@ -78,6 +78,7 @@ export default function WeeklySchedule({
   const theme = useTheme();
   const isDark = useLayoutStore((s) => s.isDarkTheme);
   const isDesktop = useMediaQuery(theme.breakpoints.up("md"));
+  const [scrollLeft, setScrollLeft] = useState(0);
 
   /* 1. derive days & time-slots --------------------------------------- */
   const daysOfWeek = useMemo(() => {
@@ -147,6 +148,42 @@ export default function WeeklySchedule({
 
   /* 4. static styles --------------------------------------------------- */
   const headerBg = isDark ? theme.palette.grey[900] : theme.palette.grey[100];
+  const timeColWidth = 120;
+  const dayColWidth = 220;
+  const minTableWidth = Math.max(
+    900,
+    timeColWidth + dayColWidth * daysOfWeek.length,
+  );
+
+  const headerRow = (
+    <TableRow>
+      <TableCell
+        sx={{
+          backgroundColor: headerBg,
+          fontWeight: 600,
+          textAlign: "left",
+          borderRight: "1px solid",
+          borderColor: theme.palette.divider,
+        }}
+      >
+        Time
+      </TableCell>
+      {daysOfWeek.map((day, idx) => (
+        <TableCell
+          key={day}
+          sx={{
+            backgroundColor: headerBg,
+            fontWeight: 600,
+            textAlign: "center",
+            borderRight: idx < daysOfWeek.length - 1 ? "1px solid" : "none",
+            borderColor: theme.palette.divider,
+          }}
+        >
+          {day}
+        </TableCell>
+      ))}
+    </TableRow>
+  );
 
   /* 5. render ---------------------------------------------------------- */
   return (
@@ -178,54 +215,89 @@ export default function WeeklySchedule({
       <TableContainer
         component={Paper}
         sx={{
-          overflowX: "auto",
-          maxHeight: "min(72vh, 720px)",
+          overflow: "visible",
           borderRadius: 2,
           border: "1px solid",
           borderColor: theme.palette.divider,
-          "@media print": { overflowX: "visible" },
+          "@media print": {
+            display: "block",
+            overflow: "visible !important",
+            maxHeight: "none !important",
+            border: "none",
+            "& .MuiTable-root": {
+              tableLayout: "auto",
+            },
+            "& .MuiTableCell-stickyHeader": {
+              position: "static",
+            },
+          },
         }}
       >
+        {/* sticky header that follows page scroll */}
+        <Box
+          className="no-print"
+          sx={{
+            position: "sticky",
+            top: "var(--app-header-offset, 0px)",
+            zIndex: (t) => t.zIndex.appBar - 1,
+            backgroundColor: headerBg,
+            borderBottom: "1px solid",
+            borderColor: theme.palette.divider,
+            overflow: "hidden",
+            transition: "top .35s ease",
+          }}
+        >
+          <Box sx={{ transform: `translateX(-${scrollLeft}px)` }}>
+            <Table
+              size="small"
+              sx={{
+                minWidth: minTableWidth,
+                tableLayout: "fixed",
+                "& .MuiTableCell-root": { borderColor: theme.palette.divider },
+              }}
+            >
+              <colgroup>
+                <col style={{ width: timeColWidth }} />
+                {daysOfWeek.map((d) => (
+                  <col key={d} style={{ width: dayColWidth }} />
+                ))}
+              </colgroup>
+              <TableHead>{headerRow}</TableHead>
+            </Table>
+          </Box>
+        </Box>
+
+        {/* body with horizontal scroll */}
+        <Box
+          onScroll={(e) => setScrollLeft(e.currentTarget.scrollLeft)}
+          sx={{
+            overflowX: "auto",
+            "@media print": { overflowX: "visible !important" },
+          }}
+        >
         <Table
           size="small"
-          stickyHeader
           sx={{
-            minWidth: 900,
+            minWidth: minTableWidth,
+            tableLayout: "fixed",
             "& .MuiTableCell-root": { borderColor: theme.palette.divider },
           }}
         >
-          {/* header */}
-          <TableHead>
-            <TableRow>
-              <TableCell
-                sx={{
-                  backgroundColor: headerBg,
-                  fontWeight: 600,
-                  textAlign: "left",
-                  minWidth: 100,
-                  borderRight: "1px solid",
-                  borderColor: theme.palette.divider,
-                }}
-              >
-                Time
-              </TableCell>
-              {daysOfWeek.map((day, idx) => (
-                <TableCell
-                  key={day}
-                  sx={{
-                    backgroundColor: headerBg,
-                    fontWeight: 600,
-                    textAlign: "center",
-                    minWidth: 150,
-                    borderRight:
-                      idx < daysOfWeek.length - 1 ? "1px solid" : "none",
-                    borderColor: theme.palette.divider,
-                  }}
-                >
-                  {day}
-                </TableCell>
-              ))}
-            </TableRow>
+          <colgroup>
+            <col style={{ width: timeColWidth }} />
+            {daysOfWeek.map((d) => (
+              <col key={d} style={{ width: dayColWidth }} />
+            ))}
+          </colgroup>
+
+          {/* header (kept for print) */}
+          <TableHead
+            sx={{
+              display: "none",
+              "@media print": { display: "table-header-group" },
+            }}
+          >
+            {headerRow}
           </TableHead>
 
           {/* body */}
@@ -262,6 +334,7 @@ export default function WeeklySchedule({
                     {grid[day][ts].map((e, i) => (
                       <Box
                         key={i}
+                        className="schedule-card"
                         sx={{
                           mb: 1,
                           p: 1,
@@ -378,6 +451,7 @@ export default function WeeklySchedule({
             ))}
           </TableBody>
         </Table>
+        </Box>
       </TableContainer>
 
       {/* popover for course-name on mobile */}

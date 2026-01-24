@@ -1,5 +1,5 @@
 // src/pages/department/FinalExamSchedule.tsx
-import { useMemo, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import {
   Box,
   Button,
@@ -107,6 +107,7 @@ export default function FinalExamSchedule({
   const theme = useTheme();
   const isDark = theme.palette.mode === "dark";
   const headerBg = isDark ? theme.palette.grey[900] : theme.palette.grey[100];
+  const [scrollLeft, setScrollLeft] = useState(0);
   // derive unique exam dates (DD/MM/YYYY)
   const dates = useMemo(() => {
     const uniq = Array.from(new Set(data.map((r) => String(r.exam_date ?? ""))))
@@ -141,6 +142,89 @@ export default function FinalExamSchedule({
     });
     return groups;
   }, [dates]);
+
+  const timeColWidth = 120;
+  const dateColWidth = 200;
+  const minTableWidth = Math.max(
+    900,
+    timeColWidth + dateColWidth * dates.length,
+  );
+
+  const headerRows = (
+    <>
+      <TableRow>
+        <TableCell
+          sx={{
+            backgroundColor: headerBg,
+            fontWeight: 600,
+            borderRight: "1px solid",
+            borderColor: theme.palette.divider,
+            textAlign: "center",
+          }}
+        >
+          Week
+        </TableCell>
+        {weekGroups.map((wg, idx) => (
+          <TableCell
+            key={`${wg.label}-${idx}`}
+            align="center"
+            colSpan={wg.count}
+            sx={{
+              backgroundColor: headerBg,
+              fontWeight: 700,
+              borderRight: idx < weekGroups.length - 1 ? "1px solid" : "none",
+              borderColor: theme.palette.divider,
+              textTransform: "uppercase",
+              letterSpacing: 1,
+              fontSize: "0.75rem",
+            }}
+          >
+            {wg.label}
+          </TableCell>
+        ))}
+      </TableRow>
+      <TableRow>
+        <TableCell
+          sx={{
+            backgroundColor: headerBg,
+            fontWeight: 600,
+            borderRight: "1px solid",
+            borderColor: theme.palette.divider,
+          }}
+        >
+          Time
+        </TableCell>
+        {dates.map(({ dateStr, dateObj }, idx) => (
+          <TableCell
+            key={dateStr}
+            align="center"
+            sx={{
+              backgroundColor: headerBg,
+              fontWeight: 600,
+              borderRight: idx < dates.length - 1 ? "1px solid" : "none",
+              borderColor: theme.palette.divider,
+            }}
+          >
+            <Box>
+              <Typography variant="body2">
+                {dateObj.toLocaleDateString("en-US", {
+                  weekday: "short",
+                  month: "short",
+                  day: "2-digit",
+                })}
+              </Typography>
+              <Typography
+                variant="caption"
+                sx={{ marginTop: -0.5, display: "block" }}
+              >
+                {dateObj.getFullYear()}
+              </Typography>
+            </Box>
+          </TableCell>
+        ))}
+      </TableRow>
+    </>
+  );
   // derive time slots, excluding missing times
   const timeSlots = useMemo(() => {
     const slots = data
@@ -158,6 +242,23 @@ export default function FinalExamSchedule({
       if (tA.startMins !== tB.startMins) return tA.startMins - tB.startMins;
       return tA.duration - tB.duration;
     });
+  }, [data]);
+
+  const instructorsByCourseSection = useMemo(() => {
+    const map = new Map<string, string>();
+
+    data.forEach((row) => {
+      const courseCode = String(row.course_code ?? "").trim();
+      if (!courseCode) return;
+      const section = String(row.section ?? "").trim();
+      const instructor = String(row.instructor ?? "").trim();
+      if (!instructor) return;
+
+      const key = `${courseCode}__${section || "*"}`;
+      map.set(key, mergeCsv(map.get(key) ?? "", instructor));
+    });
+
+    return map;
   }, [data]);
   // build grid: dateStr -> timeslot -> entries
   const grid = useMemo(() => {
@@ -183,23 +284,27 @@ export default function FinalExamSchedule({
 
       const courseCode = String(row.course_code ?? "").trim();
       if (!courseCode) return;
+      const section = String(row.section ?? "").trim();
+      const courseKey = section ? `${courseCode} (${section})` : courseCode;
 
-      const existing = agg[ds][ts][courseCode];
+      const instructorKey = `${courseCode}__${section || "*"}`;
+      const mergedInstructors =
+        instructorsByCourseSection.get(instructorKey) ??
+        String(row.instructor ?? "").trim();
+
+      const existing = agg[ds][ts][courseKey];
       if (!existing) {
-        agg[ds][ts][courseCode] = {
-          courseCode,
+        agg[ds][ts][courseKey] = {
+          courseCode: courseKey,
           courseName: String(row.course_name ?? "").trim(),
-          instructor: String(row.instructor ?? "").trim(),
+          instructor: mergedInstructors,
           examBuilding: String(row.exam_building ?? "").trim(),
           examHall: String(row.exam_hall ?? "").trim() || "TBA",
         };
       } else {
         existing.courseName =
           existing.courseName || String(row.course_name ?? "").trim();
-        existing.instructor = mergeCsv(
-          existing.instructor,
-          String(row.instructor ?? "").trim(),
-        );
+        existing.instructor = mergeCsv(existing.instructor, mergedInstructors);
         existing.examBuilding = mergeCsv(
           existing.examBuilding,
           String(row.exam_building ?? "").trim(),
@@ -285,8 +390,7 @@ export default function FinalExamSchedule({
         component={Paper}
         sx={{
           mb: 2,
-          overflowX: "auto",
-          maxHeight: "min(72vh, 720px)",
+          overflow: "visible",
           borderRadius: 2,
           border: "1px solid",
           borderColor: theme.palette.divider,
@@ -304,87 +408,71 @@ export default function FinalExamSchedule({
           },
         }}
       >
+        {/* sticky header that follows page scroll */}
+        <Box
+          className="no-print"
+          sx={{
+            position: "sticky",
+            top: "var(--app-header-offset, 0px)",
+            zIndex: (t) => t.zIndex.appBar - 1,
+            backgroundColor: headerBg,
+            borderBottom: "1px solid",
+            borderColor: theme.palette.divider,
+            overflow: "hidden",
+            transition: "top .35s ease",
+          }}
+        >
+          <Box sx={{ transform: `translateX(-${scrollLeft}px)` }}>
+            <Table
+              size="small"
+              sx={{
+                minWidth: minTableWidth,
+                tableLayout: "fixed",
+                "& .MuiTableCell-root": { borderColor: theme.palette.divider },
+              }}
+            >
+              <colgroup>
+                <col style={{ width: timeColWidth }} />
+                {dates.map(({ dateStr }) => (
+                  <col key={dateStr} style={{ width: dateColWidth }} />
+                ))}
+              </colgroup>
+              <TableHead>{headerRows}</TableHead>
+            </Table>
+          </Box>
+        </Box>
+
+        {/* body with horizontal scroll */}
+        <Box
+          onScroll={(e) => setScrollLeft(e.currentTarget.scrollLeft)}
+          sx={{
+            overflowX: "auto",
+            "@media print": { overflowX: "visible !important" },
+          }}
+        >
         <Table
           size="small"
-          stickyHeader
           sx={{
-            minWidth: 900,
+            minWidth: minTableWidth,
+            tableLayout: "fixed",
             "& .MuiTableCell-root": { borderColor: theme.palette.divider },
           }}
         >
-          <TableHead>
-            <TableRow>
-              <TableCell
-                sx={{
-                  backgroundColor: headerBg,
-                  fontWeight: 600,
-                  borderRight: "1px solid",
-                  borderColor: theme.palette.divider,
-                  textAlign: "center",
-                }}
-              >
-                Week
-              </TableCell>
-              {weekGroups.map((wg, idx) => (
-                <TableCell
-                  key={`${wg.label}-${idx}`}
-                  align="center"
-                  colSpan={wg.count}
-                  sx={{
-                    backgroundColor: headerBg,
-                    fontWeight: 700,
-                    borderRight:
-                      idx < weekGroups.length - 1 ? "1px solid" : "none",
-                    borderColor: theme.palette.divider,
-                    textTransform: "uppercase",
-                    letterSpacing: 1,
-                    fontSize: "0.75rem",
-                  }}
-                >
-                  {wg.label}
-                </TableCell>
-              ))}
-            </TableRow>
-            <TableRow>
-              <TableCell
-                sx={{
-                  backgroundColor: headerBg,
-                  fontWeight: 600,
-                  borderRight: "1px solid",
-                  borderColor: theme.palette.divider,
-                }}
-              >
-                Time
-              </TableCell>
-              {dates.map(({ dateStr, dateObj }, idx) => (
-                <TableCell
-                  key={dateStr}
-                  align="center"
-                  sx={{
-                    backgroundColor: headerBg,
-                    fontWeight: 600,
-                    borderRight: idx < dates.length - 1 ? "1px solid" : "none",
-                    borderColor: theme.palette.divider,
-                  }}
-                >
-                  <Box>
-                    <Typography variant="body2">
-                      {dateObj.toLocaleDateString("en-US", {
-                        weekday: "short",
-                        month: "short",
-                        day: "2-digit",
-                      })}
-                    </Typography>
-                    <Typography
-                      variant="caption"
-                      sx={{ marginTop: -0.5, display: "block" }}
-                    >
-                      {dateObj.getFullYear()}
-                    </Typography>
-                  </Box>
-                </TableCell>
-              ))}
-            </TableRow>
+          <colgroup>
+            <col style={{ width: timeColWidth }} />
+            {dates.map(({ dateStr }) => (
+              <col key={dateStr} style={{ width: dateColWidth }} />
+            ))}
+          </colgroup>
+
+          {/* header (kept for print) */}
+          <TableHead
+            sx={{
+              display: "none",
+              "@media print": { display: "table-header-group" },
+            }}
+          >
+            {headerRows}
           </TableHead>
           <TableBody>
             {timeSlots.map((ts) => (
@@ -415,6 +503,7 @@ export default function FinalExamSchedule({
                       {grid[dateStr][ts].map((item) => (
                         <Box
                           key={item.courseCode}
+                          className="schedule-card"
                           sx={{
                             p: 1,
                             borderRadius: 1.5,
@@ -472,6 +561,7 @@ export default function FinalExamSchedule({
             ))}
           </TableBody>
         </Table>
+        </Box>
       </TableContainer>
     </Box>
   );

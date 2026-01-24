@@ -92,6 +92,15 @@ body {
     word-wrap: break-word !important;
   }
 
+  /* avoid splitting course cards across pages */
+  .schedule-card {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    -webkit-column-break-inside: avoid !important;
+    display: inline-block !important;
+    width: 100% !important;
+  }
+
   /* dimmer dashed line between col 1 & 2 */
   .MuiTable-root th:first-of-type,
   .MuiTable-root td:first-of-type {
