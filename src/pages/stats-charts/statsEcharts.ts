@@ -4,9 +4,11 @@ import {
   BarChart,
   CustomChart,
   HeatmapChart,
+  SunburstChart,
   type BarSeriesOption,
   type CustomSeriesOption,
   type HeatmapSeriesOption,
+  type SunburstSeriesOption,
 } from "echarts/charts";
 import {
   DataZoomComponent,
@@ -30,6 +32,7 @@ echarts.use([
   BarChart,
   CustomChart,
   HeatmapChart,
+  SunburstChart,
   GridComponent,
   TooltipComponent,
   LegendComponent,
@@ -44,6 +47,7 @@ export type StatsChartOption = ComposeOption<
   | BarSeriesOption
   | CustomSeriesOption
   | HeatmapSeriesOption
+  | SunburstSeriesOption
   | GridComponentOption
   | TooltipComponentOption
   | LegendComponentOption
