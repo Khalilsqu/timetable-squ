@@ -127,6 +127,25 @@ export const SEMESTER_COLORS = [
   "#BAB0AC",
 ];
 
+export const LEVEL_COLORS: Record<"ug" | "pg", string> = {
+  ug: "#1E88E5",
+  pg: "#E53935",
+};
+
+export function levelColorsForTheme(
+  themeMode: "light" | "dark",
+): Record<"ug" | "pg", string> {
+  return themeMode === "dark"
+    ? {
+        ug: "#7DD3FC",
+        pg: "#FDA4AF",
+      }
+    : {
+        ug: "#1E3A8A",
+        pg: "#9D174D",
+      };
+}
+
 export function colorForIndex(index: number): string {
   return SEMESTER_COLORS[index % SEMESTER_COLORS.length];
 }

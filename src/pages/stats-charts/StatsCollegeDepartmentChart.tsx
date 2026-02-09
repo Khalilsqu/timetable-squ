@@ -17,6 +17,7 @@ import {
   colorForIndex,
   insideCountLabel,
   insideCountLabelAbs,
+  levelColorsForTheme,
   splitLevelTooltipFormatter,
   type StatsChartOption,
 } from "./statsEcharts";
@@ -88,11 +89,18 @@ export default function StatsCollegeDepartmentChart({
     const semesterColors = new Map(
       base.semesterKeys.map((key, index) => [key, colorForIndex(index)]),
     );
+    const levelColors = levelColorsForTheme(theme.themeMode);
+    const splitLabelBorderColor =
+      theme.themeMode === "dark" ? "rgba(0, 0, 0, 0.95)" : "rgba(255, 255, 255, 0.98)";
 
     const splitLabel = (
       levelKey: "ug" | "pg",
     ): NonNullable<BarSeriesOption["label"]> => ({
       ...insideCountLabelAbs(),
+      color: levelColors[levelKey],
+      fontWeight: 700,
+      textBorderColor: splitLabelBorderColor,
+      textBorderWidth: 3,
       position: levelKey === "pg" ? "insideBottom" : "insideTop",
       distance: 2,
     });
@@ -208,7 +216,7 @@ export default function StatsCollegeDepartmentChart({
           rich: {
             levelUG: {
               fontWeight: 700,
-              color: theme.axisTickLabelColor,
+              color: levelColors.ug,
               align: "left",
               width: labelWidth,
               lineHeight: 14,
@@ -216,7 +224,7 @@ export default function StatsCollegeDepartmentChart({
             },
             levelPG: {
               fontWeight: 700,
-              color: theme.axisTickLabelColor,
+              color: levelColors.pg,
               align: "left",
               width: labelWidth,
               lineHeight: 14,

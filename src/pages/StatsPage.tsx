@@ -6,6 +6,7 @@ import { useFilterStore } from "@/src/stores/filterStore";
 import StatsCollegeDepartmentChart from "./stats-charts/StatsCollegeDepartmentChart";
 import StatsCollegeSummaryChart from "./stats-charts/StatsCollegeSummaryChart";
 import StatsHallUtilizationHeatmap from "./stats-charts/StatsHallUtilizationHeatmap";
+import StatsInstructorTeachingHoursChart from "./stats-charts/StatsInstructorTeachingHoursChart";
 import { buildStatsBase, getStatsThemeTokens } from "./stats-charts/statsData";
 
 export default function StatsPage() {
@@ -46,6 +47,14 @@ export default function StatsPage() {
         theme={theme}
         isLoading={heatmapLoading}
         error={heatmapError}
+      />
+      <StatsInstructorTeachingHoursChart
+        rows={rows}
+        semesters={semInfo?.list ?? []}
+        activeSemester={heatmapSemester}
+        theme={theme}
+        isLoading={isLoading}
+        error={error}
       />
     </Box>
   );
