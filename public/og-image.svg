@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">SQU Timetable</title>
+  <desc id="desc">Sultan Qaboos University timetable and master timetable portal.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0c4a6e" />
+      <stop offset="100%" stop-color="#14532d" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)" />
+  <g fill="#ffffff">
+    <text x="80" y="250" font-family="Arial, Helvetica, sans-serif" font-size="72" font-weight="700">
+      SQU Timetable
+    </text>
+    <text x="80" y="330" font-family="Arial, Helvetica, sans-serif" font-size="38" font-weight="400">
+      Sultan Qaboos University
+    </text>
+    <text x="80" y="390" font-family="Arial, Helvetica, sans-serif" font-size="34" font-weight="400">
+      Master Timetable • Registration • Courses
+    </text>
+  </g>
+</svg>

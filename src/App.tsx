@@ -11,6 +11,7 @@ import DepartmentTimetable from "@/src/pages/department/DepartmentTimetable";
 import CollegeTimetable from "@/src/pages/college/CollegeTimeTable";
 import CommonSlot from "@/src/pages/common/CommonSlot";
 import StatsPage from "@/src/pages/StatsPage";
+import RouteSeo from "@/src/components/seo/RouteSeo";
 
 /* --- 1. A small wrapper that gets the current location --- */
 const AnimatedRoutes = () => {
@@ -38,6 +39,7 @@ const AnimatedRoutes = () => {
 export default function App() {
   return (
     <BrowserRouter>
+      <RouteSeo />
       <AnimatedRoutes />
     </BrowserRouter>
   );
