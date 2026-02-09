@@ -21,4 +21,3 @@ export const fmtStart = (iso?: string) =>
 
 /** Extract “HH:MM” from ISO exam_end */
 export const fmtEnd = (iso?: string) => (iso ? iso.slice(11, 16) : undefined);
-

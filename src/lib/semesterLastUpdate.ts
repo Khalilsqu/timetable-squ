@@ -33,7 +33,7 @@ function parseGvizDate(cell: string): Date | null {
 }
 
 export async function fetchSemesterLastUpdate(
-  wantedSemester?: string // NEW
+  wantedSemester?: string, // NEW
 ): Promise<SemesterLastUpdate> {
   /* 1 — build a proper gviz URL (works with share links or direct) */
   const sheetOrUrl = import.meta.env.VITE_GOOGLE_SHEET2 as string;
@@ -74,7 +74,7 @@ export async function fetchSemesterLastUpdate(
   /* 5 — pick the row for the wanted semester (case‑insensitive) */
   const match = wantedSemester
     ? rows.find(
-        (r) => r.semester.toLowerCase() === wantedSemester.toLowerCase()
+        (r) => r.semester.toLowerCase() === wantedSemester.toLowerCase(),
       )
     : undefined;
 

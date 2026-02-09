@@ -10,7 +10,7 @@ interface SelectionTableState {
 
   selectedDepartment: { department: string; college: string } | null;
   setSelectedDepartment: (
-    d: { department: string; college: string } | null
+    d: { department: string; college: string } | null,
   ) => void;
 }
 

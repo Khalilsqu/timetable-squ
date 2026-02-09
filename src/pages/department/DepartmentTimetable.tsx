@@ -32,14 +32,14 @@ const getParam = (sp: URLSearchParams, k: string) => sp.get(k) ?? undefined;
 
 type SetSearchParams = (
   nextInit: URLSearchParams,
-  opts?: { replace?: boolean }
+  opts?: { replace?: boolean },
 ) => void;
 
 const setParam = (
   sp: URLSearchParams,
   k: string,
   v: string | undefined,
-  replaceFn: SetSearchParams //
+  replaceFn: SetSearchParams, //
 ) => {
   const next = new URLSearchParams(sp);
 
@@ -93,7 +93,7 @@ export default function DepartmentTimetable() {
     return Array.from(map.values()).sort((a, b) =>
       a.college === b.college
         ? a.department.localeCompare(b.department)
-        : a.college.localeCompare(b.college)
+        : a.college.localeCompare(b.college),
     );
   }, [rows]);
 
@@ -131,12 +131,12 @@ export default function DepartmentTimetable() {
             .map((r) => [
               String(r.course_code),
               `${r.course_code as string} — ${r.course_name as string}`,
-            ])
-        ).entries()
+            ]),
+        ).entries(),
       )
         .map(([code, label]) => ({ code, label }))
         .sort((a, b) => a.code.localeCompare(b.code)),
-    [filtered]
+    [filtered],
   );
 
   /* 5.2️⃣  filter selections moved to zustand (empty = show all) */
@@ -160,12 +160,12 @@ export default function DepartmentTimetable() {
         return instOk && courseOk;
       });
     },
-    [selInstructors, selCourses]
+    [selInstructors, selCourses],
   );
 
   const finalFiltered = useMemo(
     () => applyRowFilters(filtered),
-    [filtered, applyRowFilters]
+    [filtered, applyRowFilters],
   );
 
   /* 5.3️⃣  exam view rows: keep section, include all session instructors */
@@ -177,14 +177,14 @@ export default function DepartmentTimetable() {
       selCourses.length === 0
         ? base
         : base.filter((r) =>
-            selCourses.includes(String(r.course_code ?? "").trim())
+            selCourses.includes(String(r.course_code ?? "").trim()),
           );
 
     const sectionSource =
       selInstructors.length === 0
         ? courseFiltered
         : courseFiltered.filter((r) =>
-            selInstructors.includes(String(r.instructor ?? "").trim())
+            selInstructors.includes(String(r.instructor ?? "").trim()),
           );
 
     const sectionKeys = new Set<string>();

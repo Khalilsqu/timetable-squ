@@ -51,17 +51,17 @@ export default function InstructorTimetable() {
   /* 3️⃣  list of unique instructor names ------------------------------ */
   const instructors = useMemo<string[]>(() => {
     const set = new Set(
-      rows.map((r) => norm(r.instructor)).filter((n) => n.length > 0)
+      rows.map((r) => norm(r.instructor)).filter((n) => n.length > 0),
     );
     return Array.from(set).sort();
   }, [rows]);
 
   /* 4️⃣  Zustand store for selection ---------------------------------- */
   const selectedInstructors = useSelectionTableStore(
-    (s) => s.selectedInstructors
+    (s) => s.selectedInstructors,
   );
   const setSelectedInstructors = useSelectionTableStore(
-    (s) => s.setSelectedInstructors
+    (s) => s.setSelectedInstructors,
   );
 
   /* 5️⃣  filter rows for chosen instructors --------------------------- */

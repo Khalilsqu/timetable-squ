@@ -38,7 +38,10 @@ export type StatsBaseData = {
   >;
 
   displayDeptByCollegeByKey: Map<string, Map<string, string>>;
-  uniqueCoursesByCollegeDeptSem: Map<string, Map<string, Map<string, Set<string>>>>; // college -> dept -> sem -> courses
+  uniqueCoursesByCollegeDeptSem: Map<
+    string,
+    Map<string, Map<string, Set<string>>>
+  >; // college -> dept -> sem -> courses
   uniqueCoursesByCollegeDeptSemLevel: Map<
     string,
     Map<string, Map<string, Map<LevelKey, Set<string>>>>
@@ -64,9 +67,15 @@ export const toNumber = (v: unknown): number => {
 };
 
 export function normalizeLevel(v: unknown): LevelKey | null {
-  const raw = String(v ?? "").trim().toLowerCase();
+  const raw = String(v ?? "")
+    .trim()
+    .toLowerCase();
   if (!raw) return null;
-  if (raw === "ug" || raw.startsWith("undergrad") || raw.includes("undergraduate")) {
+  if (
+    raw === "ug" ||
+    raw.startsWith("undergrad") ||
+    raw.includes("undergraduate")
+  ) {
     return "ug";
   }
   if (
@@ -87,7 +96,7 @@ export function normalizeLevel(v: unknown): LevelKey | null {
 export function calcMinWidth(
   categoryCount: number,
   base = 900,
-  perCategory = 60
+  perCategory = 60,
 ): number {
   return Math.max(base, categoryCount * perCategory);
 }
@@ -104,7 +113,7 @@ export function getStatsThemeTokens(theme: Theme): StatsThemeTokens {
 
 function orderSemesterKeys(
   displaySemesterByKey: Map<string, string>,
-  semestersList?: string[]
+  semestersList?: string[],
 ): string[] {
   const presentSemesterKeys = new Set(displaySemesterByKey.keys());
   const semesterKeys: string[] = [];
@@ -120,8 +129,8 @@ function orderSemesterKeys(
 
   for (const key of [...presentSemesterKeys].sort((a, b) =>
     (displaySemesterByKey.get(a) ?? a).localeCompare(
-      displaySemesterByKey.get(b) ?? b
-    )
+      displaySemesterByKey.get(b) ?? b,
+    ),
   )) {
     if (pushed.has(key)) continue;
     semesterKeys.push(key);
@@ -133,7 +142,7 @@ function orderSemesterKeys(
 
 export function buildStatsBase(
   rows: SheetRow[] | undefined,
-  semestersList?: string[]
+  semestersList?: string[],
 ): StatsBaseData | null {
   if (!rows?.length) return null;
 
@@ -303,7 +312,9 @@ export function buildStatsBase(
   const semesterKeys = orderSemesterKeys(displaySemesterByKey, semestersList);
 
   const collegeKeys = [...displayCollegeByKey.keys()].sort((a, b) =>
-    (displayCollegeByKey.get(a) ?? a).localeCompare(displayCollegeByKey.get(b) ?? b)
+    (displayCollegeByKey.get(a) ?? a).localeCompare(
+      displayCollegeByKey.get(b) ?? b,
+    ),
   );
   const colleges = collegeKeys.map((k) => displayCollegeByKey.get(k) ?? k);
 
@@ -311,10 +322,16 @@ export function buildStatsBase(
   const courseTotals = new Map<string, number>(); // semester|college|dept|course -> total
   const courseTotalsByLevel = new Map<string, number>(); // semester|college|dept|course|level -> total
   for (const s of sectionEnrollmentByKey.values()) {
-    const courseId = [s.semesterKey, s.collegeKey, s.departmentKey, s.courseKey].join(
-      SEP
+    const courseId = [
+      s.semesterKey,
+      s.collegeKey,
+      s.departmentKey,
+      s.courseKey,
+    ].join(SEP);
+    courseTotals.set(
+      courseId,
+      (courseTotals.get(courseId) ?? 0) + s.enrollment,
     );
-    courseTotals.set(courseId, (courseTotals.get(courseId) ?? 0) + s.enrollment);
     if (s.levelKey) {
       const courseLevelId = [
         s.semesterKey,
@@ -325,7 +342,7 @@ export function buildStatsBase(
       ].join(SEP);
       courseTotalsByLevel.set(
         courseLevelId,
-        (courseTotalsByLevel.get(courseLevelId) ?? 0) + s.enrollment
+        (courseTotalsByLevel.get(courseLevelId) ?? 0) + s.enrollment,
       );
     }
   }

@@ -24,7 +24,7 @@ export default function StatsPage() {
 
   const base = useMemo(
     () => buildStatsBase(rows, semInfo?.list),
-    [rows, semInfo?.list]
+    [rows, semInfo?.list],
   );
 
   return (

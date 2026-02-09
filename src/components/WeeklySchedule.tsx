@@ -190,11 +190,7 @@ export default function WeeklySchedule({
     <>
       {/* ——— header row ——— */}
       <Box mb={2} className="no-print">
-        <Box
-          display="flex"
-          justifyContent="space-between"
-          alignItems="center"
-        >
+        <Box display="flex" justifyContent="space-between" alignItems="center">
           <Typography variant="h6">
             Weekly Schedule{semester && `: ${semester}`}
           </Typography>
@@ -277,182 +273,188 @@ export default function WeeklySchedule({
             "@media print": { overflowX: "visible !important" },
           }}
         >
-        <Table
-          size="small"
-          sx={{
-            minWidth: minTableWidth,
-            tableLayout: "fixed",
-            "& .MuiTableCell-root": { borderColor: theme.palette.divider },
-          }}
-        >
-          <colgroup>
-            <col style={{ width: timeColWidth }} />
-            {daysOfWeek.map((d) => (
-              <col key={d} style={{ width: dayColWidth }} />
-            ))}
-          </colgroup>
-
-          {/* header (kept for print) */}
-          <TableHead
+          <Table
+            size="small"
             sx={{
-              display: "none",
-              "@media print": { display: "table-header-group" },
+              minWidth: minTableWidth,
+              tableLayout: "fixed",
+              "& .MuiTableCell-root": { borderColor: theme.palette.divider },
             }}
           >
-            {headerRow}
-          </TableHead>
+            <colgroup>
+              <col style={{ width: timeColWidth }} />
+              {daysOfWeek.map((d) => (
+                <col key={d} style={{ width: dayColWidth }} />
+              ))}
+            </colgroup>
 
-          {/* body */}
-          <TableBody>
-            {timeSlots.map((ts) => (
-              <TableRow key={ts}>
-                {/* time-slot label */}
-                <TableCell
-                  sx={{
-                    backgroundColor: headerBg,
-                    fontWeight: 500,
-                    textAlign: "left",
-                    borderRight: "1px solid",
-                    borderColor: theme.palette.divider,
-                  }}
-                >
-                  {ts}
-                </TableCell>
+            {/* header (kept for print) */}
+            <TableHead
+              sx={{
+                display: "none",
+                "@media print": { display: "table-header-group" },
+              }}
+            >
+              {headerRow}
+            </TableHead>
 
-                {/* one cell per day */}
-                {daysOfWeek.map((day, idx) => (
+            {/* body */}
+            <TableBody>
+              {timeSlots.map((ts) => (
+                <TableRow key={ts}>
+                  {/* time-slot label */}
                   <TableCell
-                    key={day}
                     sx={{
-                      backgroundColor: theme.palette.background.paper,
-                      verticalAlign: "top",
-                      p: 1.25,
-                      height: 110,
-                      borderRight:
-                        idx < daysOfWeek.length - 1 ? "1px solid" : "none",
+                      backgroundColor: headerBg,
+                      fontWeight: 500,
+                      textAlign: "left",
+                      borderRight: "1px solid",
                       borderColor: theme.palette.divider,
                     }}
                   >
-                    {grid[day][ts].map((e, i) => (
-                      <Box
-                        key={i}
-                        className="schedule-card"
-                        sx={{
-                          mb: 1,
-                          p: 1,
-                          borderRadius: 1.5,
-                          border: "1px solid",
-                          borderColor: theme.palette.divider,
-                          bgcolor: isDark
-                            ? theme.palette.grey[900]
-                            : theme.palette.common.white,
-                        }}
-                      >
-                        <Stack spacing={0.75}>
-                          <Box
-                            sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              gap: 0.5,
-                              flexWrap: "wrap",
-                            }}
-                          >
-                            <Tooltip
-                              title={
-                                !hideTooltip && e.courseName ? e.courseName : ""
-                              }
-                              disableHoverListener={
-                                hideTooltip || !e.courseName || !isDesktop
-                              }
-                              disableFocusListener={
-                                hideTooltip || !e.courseName || !isDesktop
-                              }
-                              disableTouchListener={
-                                hideTooltip || !e.courseName || !isDesktop
-                              }
-                              slotProps={{
-                                popper: {
-                                  className: "no-print",
-                                },
-                                tooltip: {
-                                  sx: {
-                                    fontSize: isDesktop ? "0.95rem" : undefined,
-                                    padding: isDesktop ? "6px 10px" : undefined,
-                                  },
-                                },
-                              }}
-                            >
-                              <Chip
-                                size="small"
-                                color="primary"
-                                label={`${e.courseCode ?? ""}${
-                                  e.section ? ` (${e.section})` : ""
-                                }`}
-                                sx={{ fontWeight: 600 }}
-                              />
-                            </Tooltip>
-
-                            {!!e.sectionType && (
-                              <Chip
-                                size="small"
-                                variant="outlined"
-                                label={e.sectionType}
-                              />
-                            )}
-
-                            {!!e.courseName && !hideTooltip && !isDesktop && (
-                              <IconButton
-                                size="small"
-                                className="no-print"
-                                onClick={(ev) => {
-                                  setAnchorEl(ev.currentTarget);
-                                  setContent(e.courseName ?? "");
-                                }}
-                                aria-label="show course name"
-                              >
-                                <InfoOutlinedIcon
-                                  fontSize="inherit"
-                                  color={isDark ? "secondary" : "primary"}
-                                />
-                              </IconButton>
-                            )}
-                          </Box>
-
-                          {!hideInstructor && !!e.instructor && (
-                            <Typography
-                              variant="caption"
-                              component="div"
-                              sx={{
-                                color: "text.secondary",
-                                textAlign: "center",
-                              }}
-                            >
-                              {e.instructor}
-                            </Typography>
-                          )}
-
-                          {!!e.hall && (
-                            <Typography
-                              variant="caption"
-                              component="div"
-                              sx={{
-                                color: "text.secondary",
-                                textAlign: "center",
-                              }}
-                            >
-                              {e.hall}
-                            </Typography>
-                          )}
-                        </Stack>
-                      </Box>
-                    ))}
+                    {ts}
                   </TableCell>
-                ))}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+
+                  {/* one cell per day */}
+                  {daysOfWeek.map((day, idx) => (
+                    <TableCell
+                      key={day}
+                      sx={{
+                        backgroundColor: theme.palette.background.paper,
+                        verticalAlign: "top",
+                        p: 1.25,
+                        height: 110,
+                        borderRight:
+                          idx < daysOfWeek.length - 1 ? "1px solid" : "none",
+                        borderColor: theme.palette.divider,
+                      }}
+                    >
+                      {grid[day][ts].map((e, i) => (
+                        <Box
+                          key={i}
+                          className="schedule-card"
+                          sx={{
+                            mb: 1,
+                            p: 1,
+                            borderRadius: 1.5,
+                            border: "1px solid",
+                            borderColor: theme.palette.divider,
+                            bgcolor: isDark
+                              ? theme.palette.grey[900]
+                              : theme.palette.common.white,
+                          }}
+                        >
+                          <Stack spacing={0.75}>
+                            <Box
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                gap: 0.5,
+                                flexWrap: "wrap",
+                              }}
+                            >
+                              <Tooltip
+                                title={
+                                  !hideTooltip && e.courseName
+                                    ? e.courseName
+                                    : ""
+                                }
+                                disableHoverListener={
+                                  hideTooltip || !e.courseName || !isDesktop
+                                }
+                                disableFocusListener={
+                                  hideTooltip || !e.courseName || !isDesktop
+                                }
+                                disableTouchListener={
+                                  hideTooltip || !e.courseName || !isDesktop
+                                }
+                                slotProps={{
+                                  popper: {
+                                    className: "no-print",
+                                  },
+                                  tooltip: {
+                                    sx: {
+                                      fontSize: isDesktop
+                                        ? "0.95rem"
+                                        : undefined,
+                                      padding: isDesktop
+                                        ? "6px 10px"
+                                        : undefined,
+                                    },
+                                  },
+                                }}
+                              >
+                                <Chip
+                                  size="small"
+                                  color="primary"
+                                  label={`${e.courseCode ?? ""}${
+                                    e.section ? ` (${e.section})` : ""
+                                  }`}
+                                  sx={{ fontWeight: 600 }}
+                                />
+                              </Tooltip>
+
+                              {!!e.sectionType && (
+                                <Chip
+                                  size="small"
+                                  variant="outlined"
+                                  label={e.sectionType}
+                                />
+                              )}
+
+                              {!!e.courseName && !hideTooltip && !isDesktop && (
+                                <IconButton
+                                  size="small"
+                                  className="no-print"
+                                  onClick={(ev) => {
+                                    setAnchorEl(ev.currentTarget);
+                                    setContent(e.courseName ?? "");
+                                  }}
+                                  aria-label="show course name"
+                                >
+                                  <InfoOutlinedIcon
+                                    fontSize="inherit"
+                                    color={isDark ? "secondary" : "primary"}
+                                  />
+                                </IconButton>
+                              )}
+                            </Box>
+
+                            {!hideInstructor && !!e.instructor && (
+                              <Typography
+                                variant="caption"
+                                component="div"
+                                sx={{
+                                  color: "text.secondary",
+                                  textAlign: "center",
+                                }}
+                              >
+                                {e.instructor}
+                              </Typography>
+                            )}
+
+                            {!!e.hall && (
+                              <Typography
+                                variant="caption"
+                                component="div"
+                                sx={{
+                                  color: "text.secondary",
+                                  textAlign: "center",
+                                }}
+                              >
+                                {e.hall}
+                              </Typography>
+                            )}
+                          </Stack>
+                        </Box>
+                      ))}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </Box>
       </TableContainer>
 

@@ -27,4 +27,3 @@ const PageTransition = ({ children }: PropsWithChildren) => (
 );
 
 export default PageTransition;
-

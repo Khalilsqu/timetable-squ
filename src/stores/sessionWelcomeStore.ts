@@ -19,5 +19,5 @@ export const useSessionWelcomeStore = create<SessionWelcomeState>(
       if (dismissed) set({ open: false });
     },
     dismiss: () => set({ open: false, dismissed: true }),
-  })
+  }),
 );

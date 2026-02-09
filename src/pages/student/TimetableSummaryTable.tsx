@@ -39,7 +39,7 @@ export default function TimetableSummaryTable({ rows }: Props) {
       { accessorKey: "instructor", header: "Instructor" },
       { accessorKey: "examDate", header: "Exam Date" },
     ],
-    []
+    [],
   );
 
   const table = useMaterialReactTable({
@@ -52,9 +52,14 @@ export default function TimetableSummaryTable({ rows }: Props) {
     enableBottomToolbar: false,
     renderCaption: ({ table }) => {
       const visible = table.getRowModel().rows.map((r) => r.original);
-      const total = visible.reduce((sum, row) => sum + (row.creditHours || 0), 0);
+      const total = visible.reduce(
+        (sum, row) => sum + (row.creditHours || 0),
+        0,
+      );
       const rounded = Math.round(total * 10) / 10;
-      const formatted = Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
+      const formatted = Number.isInteger(rounded)
+        ? String(rounded)
+        : rounded.toFixed(1);
 
       return (
         <Box
@@ -90,4 +95,3 @@ export default function TimetableSummaryTable({ rows }: Props) {
     </Box>
   );
 }
-

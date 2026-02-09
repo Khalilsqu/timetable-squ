@@ -24,4 +24,3 @@ export default function SelectedCourseChips({ chosen, onRemove }: Props) {
     </Box>
   );
 }
-

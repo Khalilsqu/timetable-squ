@@ -367,11 +367,7 @@ export default function FinalExamSchedule({
     <Box>
       {/* header with print button */}
       <Box mb={2} className="no-print">
-        <Box
-          display="flex"
-          justifyContent="space-between"
-          alignItems="center"
-        >
+        <Box display="flex" justifyContent="space-between" alignItems="center">
           <Typography variant="h6">
             Final Exam Schedule for {department}
             {semester ? `: ${semester}` : ""}
@@ -454,117 +450,117 @@ export default function FinalExamSchedule({
             "@media print": { overflowX: "visible !important" },
           }}
         >
-        <Table
-          size="small"
-          sx={{
-            minWidth: minTableWidth,
-            tableLayout: "fixed",
-            "& .MuiTableCell-root": { borderColor: theme.palette.divider },
-          }}
-        >
-          <colgroup>
-            <col style={{ width: timeColWidth }} />
-            {dates.map(({ dateStr }) => (
-              <col key={dateStr} style={{ width: dateColWidth }} />
-            ))}
-          </colgroup>
-
-          {/* header (kept for print) */}
-          <TableHead
+          <Table
+            size="small"
             sx={{
-              display: "none",
-              "@media print": { display: "table-header-group" },
+              minWidth: minTableWidth,
+              tableLayout: "fixed",
+              "& .MuiTableCell-root": { borderColor: theme.palette.divider },
             }}
           >
-            {headerRows}
-          </TableHead>
-          <TableBody>
-            {timeSlots.map((ts) => (
-              <TableRow key={ts}>
-                <TableCell
-                  sx={{
-                    backgroundColor: headerBg,
-                    fontWeight: 500,
-                    borderRight: "1px solid",
-                    borderColor: theme.palette.divider,
-                  }}
-                >
-                  {ts}
-                </TableCell>
-                {dates.map(({ dateStr }, idx) => (
+            <colgroup>
+              <col style={{ width: timeColWidth }} />
+              {dates.map(({ dateStr }) => (
+                <col key={dateStr} style={{ width: dateColWidth }} />
+              ))}
+            </colgroup>
+
+            {/* header (kept for print) */}
+            <TableHead
+              sx={{
+                display: "none",
+                "@media print": { display: "table-header-group" },
+              }}
+            >
+              {headerRows}
+            </TableHead>
+            <TableBody>
+              {timeSlots.map((ts) => (
+                <TableRow key={ts}>
                   <TableCell
-                    key={`${dateStr}-${ts}`}
-                    align="center"
                     sx={{
-                      borderRight:
-                        idx < dates.length - 1 ? "1px solid" : "none",
+                      backgroundColor: headerBg,
+                      fontWeight: 500,
+                      borderRight: "1px solid",
                       borderColor: theme.palette.divider,
-                      verticalAlign: "top",
-                      p: 1.25,
                     }}
                   >
-                    <Stack spacing={1}>
-                      {grid[dateStr][ts].map((item) => (
-                        <Box
-                          key={item.courseCode}
-                          className="schedule-card"
-                          sx={{
-                            p: 1,
-                            borderRadius: 1.5,
-                            border: "1px solid",
-                            borderColor: theme.palette.divider,
-                            bgcolor: isDark
-                              ? theme.palette.grey[900]
-                              : theme.palette.common.white,
-                          }}
-                        >
-                          <Stack spacing={0.75} alignItems="center">
-                            <Tooltip
-                              title={item.courseName || ""}
-                              disableHoverListener={!item.courseName}
-                              disableFocusListener={!item.courseName}
-                              disableTouchListener={!item.courseName}
-                              slotProps={{
-                                popper: {
-                                  className: "no-print",
-                                },
-                              }}
-                            >
-                              <Chip
-                                size="small"
-                                color="primary"
-                                label={item.courseCode}
-                                sx={{ fontWeight: 600 }}
-                              />
-                            </Tooltip>
-
-                            {item.examHall ? (
-                              <Typography
-                                variant="caption"
-                                sx={{ color: "text.secondary" }}
-                              >
-                                {item.examHall}
-                              </Typography>
-                            ) : null}
-
-                            {item.instructor ? (
-                              <Typography
-                                variant="caption"
-                                sx={{ color: "text.secondary" }}
-                              >
-                                {item.instructor}
-                              </Typography>
-                            ) : null}
-                          </Stack>
-                        </Box>
-                      ))}
-                    </Stack>
+                    {ts}
                   </TableCell>
-                ))}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+                  {dates.map(({ dateStr }, idx) => (
+                    <TableCell
+                      key={`${dateStr}-${ts}`}
+                      align="center"
+                      sx={{
+                        borderRight:
+                          idx < dates.length - 1 ? "1px solid" : "none",
+                        borderColor: theme.palette.divider,
+                        verticalAlign: "top",
+                        p: 1.25,
+                      }}
+                    >
+                      <Stack spacing={1}>
+                        {grid[dateStr][ts].map((item) => (
+                          <Box
+                            key={item.courseCode}
+                            className="schedule-card"
+                            sx={{
+                              p: 1,
+                              borderRadius: 1.5,
+                              border: "1px solid",
+                              borderColor: theme.palette.divider,
+                              bgcolor: isDark
+                                ? theme.palette.grey[900]
+                                : theme.palette.common.white,
+                            }}
+                          >
+                            <Stack spacing={0.75} alignItems="center">
+                              <Tooltip
+                                title={item.courseName || ""}
+                                disableHoverListener={!item.courseName}
+                                disableFocusListener={!item.courseName}
+                                disableTouchListener={!item.courseName}
+                                slotProps={{
+                                  popper: {
+                                    className: "no-print",
+                                  },
+                                }}
+                              >
+                                <Chip
+                                  size="small"
+                                  color="primary"
+                                  label={item.courseCode}
+                                  sx={{ fontWeight: 600 }}
+                                />
+                              </Tooltip>
+
+                              {item.examHall ? (
+                                <Typography
+                                  variant="caption"
+                                  sx={{ color: "text.secondary" }}
+                                >
+                                  {item.examHall}
+                                </Typography>
+                              ) : null}
+
+                              {item.instructor ? (
+                                <Typography
+                                  variant="caption"
+                                  sx={{ color: "text.secondary" }}
+                                >
+                                  {item.instructor}
+                                </Typography>
+                              ) : null}
+                            </Stack>
+                          </Box>
+                        ))}
+                      </Stack>
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </Box>
       </TableContainer>
     </Box>

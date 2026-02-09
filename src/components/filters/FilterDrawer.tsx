@@ -24,8 +24,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useFilterStore } from "@/src/stores/filterStore";
 
 /* ——— sheet helpers ——— */
-import { fetchSheetData } from "@/src/lib/googleSheet";
 import { fetchSemesters } from "@/src/lib/semesters"; // returns {list, active}
+import { useScheduleRows } from "@/src/lib/queries";
 import type { SemesterInfo } from "@/src/lib/semesters";
 import type { SheetRow } from "@/src/lib/googleSheet";
 
@@ -99,13 +99,13 @@ const collectOptions = (rows: SheetRow[]) => {
 
   return {
     collegeList: Object.values(colleges).sort((a, b) =>
-      a.name.localeCompare(b.name)
+      a.name.localeCompare(b.name),
     ),
     departmentList: Object.values(departments).sort((a, b) =>
-      a.name.localeCompare(b.name)
+      a.name.localeCompare(b.name),
     ),
     courseList: Object.values(courses).sort((a, b) =>
-      a.code.localeCompare(b.code)
+      a.code.localeCompare(b.code),
     ),
   };
 };
@@ -125,11 +125,10 @@ const FilterDrawer = ({ open, onClose }: DrawerProps) => {
 
   const handleDepartmentChange = (
     _: React.SyntheticEvent,
-    v: DepartmentOpt[]
+    v: DepartmentOpt[],
   ) => {
     setDepartments(v.map((x) => x.id));
   };
-
 
   /* layout */
   const theme = useTheme();
@@ -178,19 +177,15 @@ const FilterDrawer = ({ open, onClose }: DrawerProps) => {
     if (!semester && activeSem) setSemester(activeSem);
   }, [semester, activeSem, setSemester, semInfo]);
 
-  const { data: scheduleRows = [] } = useQuery<SheetRow[]>({
-    queryKey: ["schedule", semester],
-    enabled: !!semester,
-    queryFn: async () => {
-      const { rows } = await fetchSheetData();
-      const filtered = rows.filter((r: SheetRow) => r.semester === semester);
-      return filtered;
-    },
-  });
+  const { data: scheduleRowsData = [] } = useScheduleRows(semester || null);
+  const scheduleRows = useMemo(
+    () => (semester ? scheduleRowsData : []),
+    [semester, scheduleRowsData],
+  );
 
   const { collegeList, departmentList, courseList } = useMemo(
     () => collectOptions(scheduleRows),
-    [scheduleRows]
+    [scheduleRows],
   );
   // Infer max credit hours from courseList
   const inferredMaxCredit = useMemo(() => {
@@ -212,12 +207,12 @@ const FilterDrawer = ({ open, onClose }: DrawerProps) => {
             .map((r) =>
               typeof r.course_language === "string"
                 ? r.course_language.trim()
-                : ""
+                : "",
             )
-            .filter(Boolean)
-        )
+            .filter(Boolean),
+        ),
       ).sort((a, b) => a.localeCompare(b)),
-    [scheduleRows]
+    [scheduleRows],
   );
 
   // prune invalid selected languages when options change
@@ -234,7 +229,7 @@ const FilterDrawer = ({ open, onClose }: DrawerProps) => {
       !colleges.length
         ? departmentList
         : departmentList.filter((d) => colleges.includes(d.college)),
-    [departmentList, colleges]
+    [departmentList, colleges],
   );
 
   const courseOptions = useMemo(
@@ -246,7 +241,7 @@ const FilterDrawer = ({ open, onClose }: DrawerProps) => {
         const okCredit = ch >= credit_hours_min && ch <= credit_hours_max;
         return okCol && okDep && okCredit;
       }),
-    [courseList, colleges, departments, credit_hours_min, credit_hours_max]
+    [courseList, colleges, departments, credit_hours_min, credit_hours_max],
   );
 
   /* prune dangling selections whenever parents change */
@@ -270,9 +265,8 @@ const FilterDrawer = ({ open, onClose }: DrawerProps) => {
     setCourses,
   ]);
 
-
   const handleCreditHoursMinChange = (
-    e: React.ChangeEvent<HTMLInputElement>
+    e: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const value = Number(e.target.value);
     const min = Number.isNaN(value) ? 0 : Math.max(0, value);
@@ -283,7 +277,7 @@ const FilterDrawer = ({ open, onClose }: DrawerProps) => {
     }
   };
   const handleCreditHoursMaxChange = (
-    e: React.ChangeEvent<HTMLInputElement>
+    e: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const value = Number(e.target.value);
     let max = Number.isNaN(value)

@@ -70,27 +70,27 @@ export default function StatsCollegeDepartmentChart({
     const deptDisplay =
       base.displayDeptByCollegeByKey.get(selectedCollegeKey) ?? new Map();
     const deptKeys = [...deptDisplay.keys()].sort((a, b) =>
-      (deptDisplay.get(a) ?? a).localeCompare(deptDisplay.get(b) ?? b)
+      (deptDisplay.get(a) ?? a).localeCompare(deptDisplay.get(b) ?? b),
     );
     const departments = deptKeys.map((k) => deptDisplay.get(k) ?? k);
     const useDataZoom = departments.length > 10;
     const minWidth = calcMinWidth(departments.length);
 
     const semesterLabels = base.semesterKeys.map(
-      (key) => base.displaySemesterByKey.get(key) ?? key
+      (key) => base.displaySemesterByKey.get(key) ?? key,
     );
     const semesterLabelByKey = new Map(
       base.semesterKeys.map((key, index) => [
         key,
         semesterLabels[index] ?? key,
-      ])
+      ]),
     );
     const semesterColors = new Map(
-      base.semesterKeys.map((key, index) => [key, colorForIndex(index)])
+      base.semesterKeys.map((key, index) => [key, colorForIndex(index)]),
     );
 
     const splitLabel = (
-      levelKey: "ug" | "pg"
+      levelKey: "ug" | "pg",
     ): NonNullable<BarSeriesOption["label"]> => ({
       ...insideCountLabelAbs(),
       position: levelKey === "pg" ? "insideBottom" : "insideTop",
@@ -126,7 +126,7 @@ export default function StatsCollegeDepartmentChart({
                   ?.get(levelKey) ?? 0;
               return value * sign;
             }),
-          }))
+          })),
         )
       : base.semesterKeys.map((semKey) => ({
           name: semesterLabelByKey.get(semKey) ?? semKey,
@@ -155,7 +155,8 @@ export default function StatsCollegeDepartmentChart({
 
     const collegeLabel =
       base.displayCollegeByKey.get(selectedCollegeKey) ?? selectedCollegeKey;
-    const metricLabel = metric === "uniqueCourses" ? "Unique courses" : "Enrollment";
+    const metricLabel =
+      metric === "uniqueCourses" ? "Unique courses" : "Enrollment";
     const fileLabel =
       metric === "uniqueCourses"
         ? "unique-courses-by-department"
@@ -171,11 +172,15 @@ export default function StatsCollegeDepartmentChart({
 
     const yValues = splitByLevel
       ? series.flatMap((entry) =>
-          Array.isArray(entry.data) ? entry.data.map((value) => Number(value) || 0) : []
+          Array.isArray(entry.data)
+            ? entry.data.map((value) => Number(value) || 0)
+            : [],
         )
       : [];
-    const yMin = splitByLevel && yValues.length ? Math.min(0, ...yValues) : undefined;
-    const yMax = splitByLevel && yValues.length ? Math.max(0, ...yValues) : undefined;
+    const yMin =
+      splitByLevel && yValues.length ? Math.min(0, ...yValues) : undefined;
+    const yMax =
+      splitByLevel && yValues.length ? Math.max(0, ...yValues) : undefined;
     const labelWidth = 36;
     const yAxisLabel: NonNullable<
       Extract<YAXisOption, { type?: "value" }>["axisLabel"]
@@ -255,7 +260,11 @@ export default function StatsCollegeDepartmentChart({
         emphasis: { iconStyle: { borderColor: theme.titleColor } },
       },
       tooltip,
-      legend: { top: 28, textStyle: { color: theme.axisTextColor }, data: semesterLabels },
+      legend: {
+        top: 28,
+        textStyle: { color: theme.axisTextColor },
+        data: semesterLabels,
+      },
       grid: {
         left: 24,
         right: 16,
@@ -308,7 +317,9 @@ export default function StatsCollegeDepartmentChart({
         <Autocomplete
           size="small"
           options={collegeOptions}
-          value={collegeOptions.find((o) => o.key === selectedCollegeKey) ?? null}
+          value={
+            collegeOptions.find((o) => o.key === selectedCollegeKey) ?? null
+          }
           getOptionLabel={(o) => o.label}
           onChange={(_, v) => setSelectedCollegeKey(v?.key ?? null)}
           renderInput={(p) => <TextField {...p} label="College" />}
@@ -349,7 +360,13 @@ export default function StatsCollegeDepartmentChart({
         </Typography>
       )}
 
-      {option && <StatsEChart option={option} minWidth={minWidth} themeMode={theme.themeMode} />}
+      {option && (
+        <StatsEChart
+          option={option}
+          minWidth={minWidth}
+          themeMode={theme.themeMode}
+        />
+      )}
     </Paper>
   );
 }

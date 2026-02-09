@@ -45,26 +45,27 @@ export default function StatsCollegeSummaryChart({
   const setSplitByLevel = useStatsStore((s) => s.setSummarySplitByLevel);
 
   const { option, minWidth } = useMemo(() => {
-    if (!base) return { option: null as StatsChartOption | null, minWidth: 900 };
+    if (!base)
+      return { option: null as StatsChartOption | null, minWidth: 900 };
 
     const useDataZoom = base.colleges.length > 10;
     const minWidth = calcMinWidth(base.colleges.length);
 
     const semesterLabels = base.semesterKeys.map(
-      (key) => base.displaySemesterByKey.get(key) ?? key
+      (key) => base.displaySemesterByKey.get(key) ?? key,
     );
     const semesterLabelByKey = new Map(
       base.semesterKeys.map((key, index) => [
         key,
         semesterLabels[index] ?? key,
-      ])
+      ]),
     );
     const semesterColors = new Map(
-      base.semesterKeys.map((key, index) => [key, colorForIndex(index)])
+      base.semesterKeys.map((key, index) => [key, colorForIndex(index)]),
     );
 
     const splitLabel = (
-      levelKey: "ug" | "pg"
+      levelKey: "ug" | "pg",
     ): NonNullable<BarSeriesOption["label"]> => ({
       ...insideCountLabelAbs(),
       position: levelKey === "pg" ? "insideBottom" : "insideTop",
@@ -84,17 +85,17 @@ export default function StatsCollegeSummaryChart({
             data: base.collegeKeys.map((collegeKey) => {
               const value =
                 metric === "uniqueCourses"
-                  ? base.coursesByCollegeBySemLevel
+                  ? (base.coursesByCollegeBySemLevel
                       .get(collegeKey)
                       ?.get(semKey)
-                      ?.get(levelKey)?.size ?? 0
-                  : base.enrollmentByCollegeBySemLevel
+                      ?.get(levelKey)?.size ?? 0)
+                  : (base.enrollmentByCollegeBySemLevel
                       .get(collegeKey)
                       ?.get(semKey)
-                      ?.get(levelKey) ?? 0;
+                      ?.get(levelKey) ?? 0);
               return levelKey === "pg" ? -value : value;
             }),
-          }))
+          })),
         )
       : base.semesterKeys.map((semKey) => ({
           name: semesterLabelByKey.get(semKey) ?? semKey,
@@ -105,8 +106,10 @@ export default function StatsCollegeSummaryChart({
           itemStyle: { color: semesterColors.get(semKey) },
           data: base.collegeKeys.map((collegeKey) =>
             metric === "uniqueCourses"
-              ? base.coursesByCollegeBySem.get(collegeKey)?.get(semKey)?.size ?? 0
-              : base.enrollmentByCollegeBySem.get(collegeKey)?.get(semKey) ?? 0
+              ? (base.coursesByCollegeBySem.get(collegeKey)?.get(semKey)
+                  ?.size ?? 0)
+              : (base.enrollmentByCollegeBySem.get(collegeKey)?.get(semKey) ??
+                0),
           ),
         }));
 
@@ -114,11 +117,13 @@ export default function StatsCollegeSummaryChart({
       ? series.flatMap((entry) =>
           Array.isArray(entry.data)
             ? entry.data.map((value) => Number(value) || 0)
-            : []
+            : [],
         )
       : [];
-    const yMin = splitByLevel && yValues.length ? Math.min(0, ...yValues) : undefined;
-    const yMax = splitByLevel && yValues.length ? Math.max(0, ...yValues) : undefined;
+    const yMin =
+      splitByLevel && yValues.length ? Math.min(0, ...yValues) : undefined;
+    const yMax =
+      splitByLevel && yValues.length ? Math.max(0, ...yValues) : undefined;
     const labelWidth = 36;
     const yAxisLabel: NonNullable<
       Extract<YAXisOption, { type?: "value" }>["axisLabel"]
@@ -215,7 +220,11 @@ export default function StatsCollegeSummaryChart({
         emphasis: { iconStyle: { borderColor: theme.titleColor } },
       },
       tooltip,
-      legend: { top: 28, textStyle: { color: theme.axisTextColor }, data: semesterLabels },
+      legend: {
+        top: 28,
+        textStyle: { color: theme.axisTextColor },
+        data: semesterLabels,
+      },
       grid: {
         left: 24,
         right: 16,
@@ -293,7 +302,11 @@ export default function StatsCollegeSummaryChart({
       )}
 
       {option && (
-        <StatsEChart option={option} minWidth={minWidth} themeMode={theme.themeMode} />
+        <StatsEChart
+          option={option}
+          minWidth={minWidth}
+          themeMode={theme.themeMode}
+        />
       )}
     </Paper>
   );

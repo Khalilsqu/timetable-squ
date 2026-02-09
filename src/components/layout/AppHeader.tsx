@@ -1,11 +1,5 @@
 // C:\Users\kalho\Desktop\github\squ_frontend2\src\components\layout\AppHeader.tsx
-import {
-  Fragment,
-  useState,
-  useRef,
-  useEffect,
-  useCallback,
-} from "react";
+import { Fragment, useState, useRef, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router";
 import {
   AppBar,
@@ -92,7 +86,7 @@ const NavAnchor = styled(NavLink)(({ theme }) => {
     "&:focus-visible": {
       boxShadow: `0 0 0 3px ${alpha(
         isDark ? theme.palette.primary.light : theme.palette.primary.main,
-        0.5
+        0.5,
       )}`,
     },
   };
@@ -136,7 +130,7 @@ const NavButton = styled(ButtonBase)(({ theme }) => {
     "&:focus-visible": {
       boxShadow: `0 0 0 3px ${alpha(
         isDark ? theme.palette.primary.light : theme.palette.primary.main,
-        0.5
+        0.5,
       )}`,
     },
   };
@@ -171,7 +165,7 @@ const AppHeader = () => {
 
   const semesterOptions = semInfo?.list ?? [];
   const extraActive = extraItems.some((item) =>
-    routerLocation.pathname.startsWith(item.path)
+    routerLocation.pathname.startsWith(item.path),
   );
   const extraMenuOpen =
     Boolean(extraAnchorEl) && extraMenuPathname === routerLocation.pathname;
@@ -319,7 +313,7 @@ const AppHeader = () => {
             visible
               ? alpha(
                   t.palette.background.paper,
-                  t.palette.mode === "dark" ? 0.88 : 0.92
+                  t.palette.mode === "dark" ? 0.88 : 0.92,
                 )
               : "transparent",
           borderBottom: (t) =>
@@ -360,7 +354,11 @@ const AppHeader = () => {
           <Box display="flex" alignItems="center" gap={2}>
             <RouterLink
               to={{ pathname: "/", search }}
-              style={{ color: "inherit", display: "flex", alignItems: "center" }}
+              style={{
+                color: "inherit",
+                display: "flex",
+                alignItems: "center",
+              }}
             >
               <HomeIcon fontSize="large" />
             </RouterLink>
@@ -483,7 +481,9 @@ const AppHeader = () => {
                       {extraItems.map((item) => (
                         <MenuItem
                           key={item.path}
-                          selected={routerLocation.pathname.startsWith(item.path)}
+                          selected={routerLocation.pathname.startsWith(
+                            item.path,
+                          )}
                           component={RouterLink}
                           to={{ pathname: item.path, search }}
                           onClick={closeExtraMenu}
@@ -518,17 +518,17 @@ const AppHeader = () => {
             />
             <DarkModeIcon fontSize="small" />
           </Box>
-          
+
           {/* mobile filter button (shown on right) */}
           {routerLocation.pathname === "/" && (
-             <IconButton
-               onClick={() => setFilterOpen(true)}
-               color="inherit"
-               sx={{ display: { xs: "flex", md: "none" } }}
-             >
-               <FilterAltIcon />
-             </IconButton>
-           )}
+            <IconButton
+              onClick={() => setFilterOpen(true)}
+              color="inherit"
+              sx={{ display: { xs: "flex", md: "none" } }}
+            >
+              <FilterAltIcon />
+            </IconButton>
+          )}
 
           {/* mobile drawer */}
           <Drawer
@@ -580,7 +580,7 @@ const AppHeader = () => {
                   <List component="div" disablePadding>
                     {extraItems.map((item) => {
                       const active = routerLocation.pathname.startsWith(
-                        item.path
+                        item.path,
                       );
                       return (
                         <ListItemButton

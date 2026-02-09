@@ -38,7 +38,7 @@ export default function SectionSearch({
         !state.inputValue
           ? []
           : opts.filter((o) =>
-              o.label.toUpperCase().includes(state.inputValue.toUpperCase())
+              o.label.toUpperCase().includes(state.inputValue.toUpperCase()),
             )
       }
       noOptionsText="Please start typing to view course list"

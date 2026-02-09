@@ -163,23 +163,23 @@ export default function CommonSlot() {
         new Set(
           rows
             .flatMap((r) => extractCanonicalDays(r.day))
-            .filter((d): d is string => !!d)
-        )
+            .filter((d): d is string => !!d),
+        ),
       ).sort((a, b) => DAY_ORDER[a.toLowerCase()] - DAY_ORDER[b.toLowerCase()]),
-    [rows]
+    [rows],
   );
 
   const halls = useMemo(
     () =>
       Array.from(
-        new Set(rows.map((r) => String(r.hall || "").trim()).filter(Boolean))
+        new Set(rows.map((r) => String(r.hall || "").trim()).filter(Boolean)),
       ).sort(),
-    [rows]
+    [rows],
   );
 
   const columns = useMemo<MRT_ColumnDef<SheetRow>[]>(
     () => buildScheduleColumns(),
-    []
+    [],
   );
 
   const filtered = useMemo(() => {

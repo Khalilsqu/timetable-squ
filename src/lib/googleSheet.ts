@@ -99,10 +99,10 @@ function normaliseKey(label: string): string {
 }
 
 /* ─────────────── Helper ─────────────── */
-export async function fetchSheetData(): Promise<SheetData> {
-  const url = import.meta.env.VITE_GOOGLE_SHEET1;
+export async function fetchSheetData(sheetUrl?: string): Promise<SheetData> {
+  const url = sheetUrl ?? import.meta.env.VITE_GOOGLE_FALL2025;
 
-  if (!url) throw new Error("VITE_GOOGLE_SHEET1 is not set");
+  if (!url) throw new Error("No Google Sheet URL was provided");
 
   /* 1. Build a proper GViz URL (works with share links or direct) */
   const idMatch = url.match(/\/d\/([a-zA-Z0-9-_]+)/);

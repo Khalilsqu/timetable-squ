@@ -202,7 +202,7 @@ export default function EntryPage() {
       credit_hours_max,
       level,
       course_languages,
-    ]
+    ],
   );
 
   useEffect(() => {
@@ -215,7 +215,7 @@ export default function EntryPage() {
   /* 2. columns are fixed – memoise once */
   const columns = useMemo<MRT_ColumnDef<SheetRow>[]>(
     () => buildScheduleColumns(),
-    []
+    [],
   );
 
   /* 3. data is memoised to avoid re-renders on other state changes */

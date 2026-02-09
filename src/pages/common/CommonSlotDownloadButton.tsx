@@ -37,7 +37,7 @@ export default function CommonSlotDownloadButton({
             const val = r[k];
             return escape(val instanceof Date ? val.toISOString() : val);
           })
-          .join(",")
+          .join(","),
       );
     }
 

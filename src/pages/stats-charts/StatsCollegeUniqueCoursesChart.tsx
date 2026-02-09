@@ -1,5 +1,11 @@
 import { useMemo, useState } from "react";
-import { Box, FormControlLabel, Paper, Switch, Typography } from "@mui/material";
+import {
+  Box,
+  FormControlLabel,
+  Paper,
+  Switch,
+  Typography,
+} from "@mui/material";
 import type { BarSeriesOption } from "echarts/charts";
 import StatsEChart from "./StatsEChart";
 import {
@@ -32,26 +38,27 @@ export default function StatsCollegeUniqueCoursesChart({
 }) {
   const [splitByLevel, setSplitByLevel] = useState(false);
   const { option, minWidth } = useMemo(() => {
-    if (!base) return { option: null as StatsChartOption | null, minWidth: 900 };
+    if (!base)
+      return { option: null as StatsChartOption | null, minWidth: 900 };
 
     const useDataZoom = base.colleges.length > 10;
     const minWidth = calcMinWidth(base.colleges.length);
 
     const semesterLabels = base.semesterKeys.map(
-      (key) => base.displaySemesterByKey.get(key) ?? key
+      (key) => base.displaySemesterByKey.get(key) ?? key,
     );
     const semesterLabelByKey = new Map(
       base.semesterKeys.map((key, index) => [
         key,
         semesterLabels[index] ?? key,
-      ])
+      ]),
     );
     const semesterColors = new Map(
-      base.semesterKeys.map((key, index) => [key, colorForIndex(index)])
+      base.semesterKeys.map((key, index) => [key, colorForIndex(index)]),
     );
 
     const splitLabel = (
-      levelKey: "ug" | "pg"
+      levelKey: "ug" | "pg",
     ): NonNullable<BarSeriesOption["label"]> => ({
       ...insideCountLabelAbs(),
       position: levelKey === "pg" ? "insideBottom" : "insideTop",
@@ -76,7 +83,7 @@ export default function StatsCollegeUniqueCoursesChart({
                   ?.get(levelKey)?.size ?? 0;
               return levelKey === "pg" ? -value : value;
             }),
-          }))
+          })),
         )
       : base.semesterKeys.map((semKey) => ({
           name: semesterLabelByKey.get(semKey) ?? semKey,
@@ -87,17 +94,22 @@ export default function StatsCollegeUniqueCoursesChart({
           itemStyle: { color: semesterColors.get(semKey) },
           data: base.collegeKeys.map(
             (collegeKey) =>
-              base.coursesByCollegeBySem.get(collegeKey)?.get(semKey)?.size ?? 0
+              base.coursesByCollegeBySem.get(collegeKey)?.get(semKey)?.size ??
+              0,
           ),
         }));
 
     const yValues = splitByLevel
       ? series.flatMap((entry) =>
-          Array.isArray(entry.data) ? entry.data.map((value) => Number(value) || 0) : []
+          Array.isArray(entry.data)
+            ? entry.data.map((value) => Number(value) || 0)
+            : [],
         )
       : [];
-    const yMin = splitByLevel && yValues.length ? Math.min(0, ...yValues) : undefined;
-    const yMax = splitByLevel && yValues.length ? Math.max(0, ...yValues) : undefined;
+    const yMin =
+      splitByLevel && yValues.length ? Math.min(0, ...yValues) : undefined;
+    const yMax =
+      splitByLevel && yValues.length ? Math.max(0, ...yValues) : undefined;
     const labelWidth = 36;
     const yAxisLabel: NonNullable<
       Extract<YAXisOption, { type?: "value" }>["axisLabel"]
@@ -185,7 +197,11 @@ export default function StatsCollegeUniqueCoursesChart({
         emphasis: { iconStyle: { borderColor: theme.titleColor } },
       },
       tooltip,
-      legend: { top: 28, textStyle: { color: theme.axisTextColor }, data: semesterLabels },
+      legend: {
+        top: 28,
+        textStyle: { color: theme.axisTextColor },
+        data: semesterLabels,
+      },
       grid: {
         left: 24,
         right: 16,
@@ -253,7 +269,11 @@ export default function StatsCollegeUniqueCoursesChart({
       )}
 
       {option && (
-        <StatsEChart option={option} minWidth={minWidth} themeMode={theme.themeMode} />
+        <StatsEChart
+          option={option}
+          minWidth={minWidth}
+          themeMode={theme.themeMode}
+        />
       )}
     </Paper>
   );

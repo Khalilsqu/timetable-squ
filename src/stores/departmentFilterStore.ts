@@ -31,5 +31,5 @@ export const useDepartmentFilterStore = create<DepartmentFilterState>()(
         courses: [],
         drawerOpen: false,
       }),
-  })
+  }),
 );

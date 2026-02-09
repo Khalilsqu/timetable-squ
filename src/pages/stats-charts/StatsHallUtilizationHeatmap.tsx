@@ -96,7 +96,12 @@ export default function StatsHallUtilizationHeatmap({
     if (heatmapInitialized || hallOptions.length === 0) return;
     setSelectedHalls(hallOptions.slice(0, 5));
     setHeatmapInitialized(true);
-  }, [hallOptions, heatmapInitialized, setHeatmapInitialized, setSelectedHalls]);
+  }, [
+    hallOptions,
+    heatmapInitialized,
+    setHeatmapInitialized,
+    setSelectedHalls,
+  ]);
 
   const { option, minWidth } = useMemo(() => {
     if (!rows?.length || selectedHalls.length === 0) {
@@ -154,11 +159,11 @@ export default function StatsHallUtilizationHeatmap({
 
         const startSlot = Math.max(
           0,
-          Math.floor((start - START_MIN) / SLOT_MIN)
+          Math.floor((start - START_MIN) / SLOT_MIN),
         );
         const endSlot = Math.min(
           slotStarts.length,
-          Math.ceil((end - START_MIN) / SLOT_MIN)
+          Math.ceil((end - START_MIN) / SLOT_MIN),
         );
         for (let slotIndex = startSlot; slotIndex < endSlot; slotIndex += 1) {
           const xKey = `${dayIndex}|${slotIndex}`;
@@ -208,7 +213,13 @@ export default function StatsHallUtilizationHeatmap({
       },
       tooltip: {
         confine: true,
-        position: (point: number[], _params: unknown, _dom: unknown, _rect: unknown, size: { viewSize: number[] }) => {
+        position: (
+          point: number[],
+          _params: unknown,
+          _dom: unknown,
+          _rect: unknown,
+          size: { viewSize: number[] },
+        ) => {
           const [x, y] = point;
           const [vw, vh] = size.viewSize;
           const offset = 16;
@@ -227,8 +238,12 @@ export default function StatsHallUtilizationHeatmap({
           const slotLabel = xLabels[xIndex] ?? "";
           const key = `${hall}|${xIndex}`;
           const list = slotDetails.get(key);
-          const details = list ? [...list].sort((a, b) => a.localeCompare(b)) : [];
-          const detailLines = details.length ? `<br/>${details.join("<br/>")}` : "";
+          const details = list
+            ? [...list].sort((a, b) => a.localeCompare(b))
+            : [];
+          const detailLines = details.length
+            ? `<br/>${details.join("<br/>")}`
+            : "";
           const displayCount = Number.isFinite(value) ? value : 0;
           return `${hall}<br/>${slotLabel}<br/>Sections: ${displayCount}${detailLines}`;
         },
@@ -298,9 +313,10 @@ export default function StatsHallUtilizationHeatmap({
         left: "center",
         bottom: 8,
         inRange: {
-          color: theme.themeMode === "dark"
-            ? ["#1f2937", "#60a5fa", "#f59e0b"]
-            : ["#f3f4f6", "#93c5fd", "#f59e0b"],
+          color:
+            theme.themeMode === "dark"
+              ? ["#1f2937", "#60a5fa", "#f59e0b"]
+              : ["#f3f4f6", "#93c5fd", "#f59e0b"],
         },
         textStyle: { color: theme.axisTextColor },
       },
@@ -324,12 +340,20 @@ export default function StatsHallUtilizationHeatmap({
             const x0 = startCoord[0] - cellSize[0] / 2 - halfStroke;
             const x1 = endCoord[0] + cellSize[0] / 2 + halfStroke;
             const topBoundary = api.coord([start, -0.5])[1] as number;
-            const bottomBoundary = api.coord([start, halls.length - 0.5])[1] as number;
+            const bottomBoundary = api.coord([
+              start,
+              halls.length - 0.5,
+            ])[1] as number;
             const yTop = Math.min(topBoundary, bottomBoundary);
             const yBottom = Math.max(topBoundary, bottomBoundary);
             const y0Raw = yTop - cellSize[1] / 2 - halfStroke - padPx;
             const y1Raw = yBottom + cellSize[1] / 2 + halfStroke + padPx;
-            const coordSys = params.coordSys as unknown as { x: number; y: number; width: number; height: number };
+            const coordSys = params.coordSys as unknown as {
+              x: number;
+              y: number;
+              width: number;
+              height: number;
+            };
             const yMin = coordSys.y;
             const yMax = coordSys.y + coordSys.height;
             const y0 = Math.max(y0Raw, yMin);
@@ -401,7 +425,11 @@ export default function StatsHallUtilizationHeatmap({
       )}
 
       {option && (
-        <StatsEChart option={option} minWidth={minWidth} themeMode={theme.themeMode} />
+        <StatsEChart
+          option={option}
+          minWidth={minWidth}
+          themeMode={theme.themeMode}
+        />
       )}
     </Paper>
   );
