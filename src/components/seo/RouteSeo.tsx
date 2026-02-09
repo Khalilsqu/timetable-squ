@@ -9,9 +9,16 @@ type SeoRoute = {
 };
 
 const SITE_NAME = "SQU Timetable";
-const SITE_URL =
-  (import.meta.env.VITE_SITE_URL as string | undefined) ??
-  "https://timetable-squ.pages.dev";
+const resolveSiteUrl = (): string => {
+  const envUrl = import.meta.env.VITE_SITE_URL as string | undefined;
+  if (envUrl) return envUrl.replace(/\/+$/, "");
+  if (typeof window !== "undefined" && window.location?.origin) {
+    return window.location.origin;
+  }
+  return "https://tt.khalilalhooti.com";
+};
+
+const SITE_URL = resolveSiteUrl();
 const DEFAULT_SOCIAL_IMAGE = new URL("/og-image.svg", SITE_URL).toString();
 const BASE_KEYWORDS = [
   "Sultan Qaboos University timetable",
