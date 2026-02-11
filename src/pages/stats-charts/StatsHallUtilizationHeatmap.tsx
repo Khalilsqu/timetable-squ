@@ -103,6 +103,13 @@ export default function StatsHallUtilizationHeatmap({
     setSelectedHalls,
   ]);
 
+  useEffect(() => {
+    if (isLoading || selectedHalls.length === 0) return;
+    const valid = new Set(hallOptions);
+    const keep = selectedHalls.filter((hall) => valid.has(hall));
+    if (keep.length !== selectedHalls.length) setSelectedHalls(keep);
+  }, [isLoading, hallOptions, selectedHalls, setSelectedHalls]);
+
   const { option, minWidth } = useMemo(() => {
     if (!rows?.length || selectedHalls.length === 0) {
       return { option: null as StatsChartOption | null, minWidth: 900 };

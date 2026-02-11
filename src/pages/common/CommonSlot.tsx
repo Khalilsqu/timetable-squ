@@ -177,6 +177,20 @@ export default function CommonSlot() {
     [rows],
   );
 
+  useEffect(() => {
+    if (isLoading || semLoading) return;
+
+    if (days.length) {
+      const validDays = new Set(allDays);
+      const keepDays = days.filter((d) => validDays.has(d));
+      if (keepDays.length !== days.length) setDays(keepDays);
+    }
+
+    if (hall && !halls.includes(hall)) {
+      setHall(null);
+    }
+  }, [isLoading, semLoading, allDays, halls, days, hall, setDays, setHall]);
+
   const columns = useMemo<MRT_ColumnDef<SheetRow>[]>(
     () => buildScheduleColumns(),
     [],

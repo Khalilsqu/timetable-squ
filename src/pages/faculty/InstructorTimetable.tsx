@@ -1,5 +1,5 @@
 // src/pages/faculty/InstructorTimetable.tsx
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useSearchParams } from "react-router";
 import {
   Box,
@@ -63,6 +63,15 @@ export default function InstructorTimetable() {
   const setSelectedInstructors = useSelectionTableStore(
     (s) => s.setSelectedInstructors,
   );
+
+  useEffect(() => {
+    if (rowLoad || selectedInstructors.length === 0) return;
+    const valid = new Set(instructors);
+    const keep = selectedInstructors.filter((name) => valid.has(name));
+    if (keep.length !== selectedInstructors.length) {
+      setSelectedInstructors(keep);
+    }
+  }, [rowLoad, instructors, selectedInstructors, setSelectedInstructors]);
 
   /* 5️⃣  filter rows for chosen instructors --------------------------- */
   const filtered = useMemo<SheetRow[]>(() => {

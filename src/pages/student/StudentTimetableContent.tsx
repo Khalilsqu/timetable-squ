@@ -6,7 +6,7 @@ import {
   ToggleButton,
   ToggleButtonGroup,
 } from "@mui/material";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import AllowConflictsToggle from "@/src/pages/student/AllowConflictsToggle";
 
 import { useFilterStore } from "@/src/stores/filterStore";
@@ -179,8 +179,15 @@ export default function StudentTimetableContent() {
   }, [rows]);
 
   /* 4️⃣  timetable store ---------------------------------------------- */
-  const { chosen, pick, remove, allowConflicts } = useTimetableStore();
+  const { chosen, setChosen, pick, remove, allowConflicts } = useTimetableStore();
   const showWarning = useNotificationStore((s) => s.showWarning);
+
+  useEffect(() => {
+    if (rowsLoading || chosen.length === 0) return;
+    const validSectionIds = new Set(sections.map((section) => section.id));
+    const keep = chosen.filter((section) => validSectionIds.has(section.id));
+    if (keep.length !== chosen.length) setChosen(keep);
+  }, [rowsLoading, sections, chosen, setChosen]);
 
   const onPickUniqueCourse = (sec: SectionOpt) => {
     const code = courseCodeOf(sec);

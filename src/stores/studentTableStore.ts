@@ -12,6 +12,7 @@ export type SectionOpt = {
 
 interface TimetableState {
   chosen: SectionOpt[];
+  setChosen: (sections: SectionOpt[]) => void;
   pick: (sec: SectionOpt) => void;
   remove: (id: string) => void;
   clear: () => void;
@@ -21,6 +22,7 @@ interface TimetableState {
 
 export const useTimetableStore = create<TimetableState>((set) => ({
   chosen: [],
+  setChosen: (sections) => set({ chosen: sections }),
   pick: (sec) =>
     set((s) => {
       const courseCode = sec.label.split(" (")[0]?.trim();

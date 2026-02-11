@@ -32,7 +32,7 @@ import { Link as RouterLink, NavLink, useLocation } from "react-router";
 import { styled, alpha } from "@mui/material/styles";
 import { useLayoutStore } from "@/src/stores/layoutStore";
 import { useFilterStore } from "@/src/stores/filterStore";
-import { useSemesters } from "@/src/lib/queries";
+import { useSemesters, useSemesterLastUpdate } from "@/src/lib/queries";
 import FilterDrawer from "@/src/components/filters/FilterDrawer";
 
 const navItems = [
@@ -157,6 +157,8 @@ const AppHeader = () => {
   const { data: semInfo } = useSemesters();
   const { semester, setSemester, softReset } = useFilterStore();
   const activeSem = semInfo?.active ?? null;
+  const selectedSemester = semester || activeSem || "";
+  const { data: lastUpdateData } = useSemesterLastUpdate(selectedSemester);
 
   // Initialize semester if not set
   useEffect(() => {
@@ -364,41 +366,69 @@ const AppHeader = () => {
             </RouterLink>
 
             {/* Semester Filter */}
-            <Autocomplete
-              size="small"
-              options={semesterOptions}
-              value={semester ?? ""}
-              disableClearable
-              onChange={(_, v) => {
-                if (v && v !== semester) {
-                  setSemester(v);
-                  softReset();
-
-                  // Preserve other params if needed, or clear?
-                  // The previous drawer implementation cleared them: setSearchParams({})
-                  // Let's keep that behavior for consistency if switching semesters invalidates other filters
-                  setSearchParams({});
-                }
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "flex-start",
+                gap: 0.25,
               }}
-              renderInput={(p) => (
-                <TextField
-                  {...p}
-                  variant="outlined"
-                  placeholder="Semester"
-                  sx={{ width: 140 }}
-                  slotProps={{
-                    input: {
-                      ...p.InputProps,
-                      style: {
-                        fontSize: "0.875rem",
-                        paddingTop: 1,
-                        paddingBottom: 1,
+            >
+              <Autocomplete
+                size="small"
+                options={semesterOptions}
+                value={semester ?? ""}
+                disableClearable
+                onChange={(_, v) => {
+                  if (v && v !== semester) {
+                    setSemester(v);
+                    softReset();
+
+                    // Preserve other params if needed, or clear?
+                    // The previous drawer implementation cleared them: setSearchParams({})
+                    // Let's keep that behavior for consistency if switching semesters invalidates other filters
+                    setSearchParams({});
+                  }
+                }}
+                renderInput={(p) => (
+                  <TextField
+                    {...p}
+                    variant="outlined"
+                    placeholder="Semester"
+                    sx={{ width: 140 }}
+                    slotProps={{
+                      input: {
+                        ...p.InputProps,
+                        style: {
+                          fontSize: "0.875rem",
+                          paddingTop: 1,
+                          paddingBottom: 1,
+                        },
                       },
-                    },
+                    }}
+                  />
+                )}
+              />
+              {lastUpdateData?.parsed && (
+                <Box
+                  component="span"
+                  sx={{
+                    fontSize: "0.68rem",
+                    color: "text.secondary",
+                    lineHeight: 1.1,
+                    pl: 0.5,
+                    whiteSpace: "nowrap",
                   }}
-                />
+                >
+                  Last update:{" "}
+                  {lastUpdateData.parsed.toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "2-digit",
+                    year: "numeric",
+                  })}
+                </Box>
               )}
-            />
+            </Box>
           </Box>
 
           {/* desktop nav */}
