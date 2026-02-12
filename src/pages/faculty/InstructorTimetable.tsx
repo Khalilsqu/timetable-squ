@@ -242,7 +242,6 @@ export default function InstructorTimetable() {
             <WeeklySchedule
               data={filtered}
               semester={semester ?? undefined}
-              hideTooltip
               showEnrollment={showEnrollment}
             />
           ) : (

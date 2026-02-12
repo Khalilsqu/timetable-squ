@@ -15,12 +15,10 @@ import {
   useTheme,
   Paper,
   Popover,
-  IconButton,
   Tooltip,
   useMediaQuery,
   Button,
 } from "@mui/material";
-import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import PrintIcon from "@mui/icons-material/Print";
 import { useLayoutStore } from "@/src/stores/layoutStore";
 import type { SheetRow } from "@/src/lib/googleSheet";
@@ -396,6 +394,14 @@ export default function WeeklySchedule({
                                     e.section ? ` (${e.section})` : ""
                                   }`}
                                   sx={{ fontWeight: 600 }}
+                                  onClick={
+                                    !hideTooltip && !isDesktop && e.courseName
+                                      ? (ev) => {
+                                          setAnchorEl(ev.currentTarget);
+                                          setContent(e.courseName ?? "");
+                                        }
+                                      : undefined
+                                  }
                                 />
                               </Tooltip>
 
@@ -407,22 +413,6 @@ export default function WeeklySchedule({
                                 />
                               )}
 
-                              {!!e.courseName && !hideTooltip && !isDesktop && (
-                                <IconButton
-                                  size="small"
-                                  className="no-print"
-                                  onClick={(ev) => {
-                                    setAnchorEl(ev.currentTarget);
-                                    setContent(e.courseName ?? "");
-                                  }}
-                                  aria-label="show course name"
-                                >
-                                  <InfoOutlinedIcon
-                                    fontSize="inherit"
-                                    color={isDark ? "secondary" : "primary"}
-                                  />
-                                </IconButton>
-                              )}
                             </Box>
 
                             {!hideInstructor && !!e.instructor && (

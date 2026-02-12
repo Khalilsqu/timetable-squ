@@ -312,7 +312,6 @@ export default function DepartmentTimetable() {
             <WeeklySchedule
               data={finalFiltered}
               semester={semester ?? undefined}
-              hideTooltip // optional: hide course-name icon
             />
           )
         ) : (
