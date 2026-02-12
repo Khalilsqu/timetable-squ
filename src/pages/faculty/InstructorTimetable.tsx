@@ -1,5 +1,5 @@
 // src/pages/faculty/InstructorTimetable.tsx
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router";
 import {
   Box,
@@ -8,6 +8,8 @@ import {
   Typography,
   ToggleButton,
   ToggleButtonGroup,
+  FormControlLabel,
+  Switch,
 } from "@mui/material";
 
 import FinalExamSchedule from "@/src/components/FinalExamSchedule";
@@ -23,9 +25,15 @@ import type { SheetRow } from "@/src/lib/googleSheet";
 
 /* ——— helpers ——— */
 const norm = (v: unknown) => (typeof v === "string" ? v.trim() : "");
+const INSTRUCTOR_PARAM = "instructor";
+
+const sameStringArray = (a: string[], b: string[]) =>
+  a.length === b.length && a.every((v, i) => v === b[i]);
 
 /* ——— component ——— */
 export default function InstructorTimetable() {
+  const [showEnrollment, setShowEnrollment] = useState(false);
+
   // use URL search param "instExams" instead of local state
   const [searchParams, setSearchParams] = useSearchParams();
   const showExams = searchParams.get("instExams") === "true";
@@ -63,6 +71,31 @@ export default function InstructorTimetable() {
   const setSelectedInstructors = useSelectionTableStore(
     (s) => s.setSelectedInstructors,
   );
+  const urlInstructorParams = useMemo(
+    () =>
+      searchParams
+        .getAll(INSTRUCTOR_PARAM)
+        .map((name) => norm(name))
+        .filter((name) => name.length > 0),
+    [searchParams],
+  );
+
+  useEffect(() => {
+    if (rowLoad) return;
+    if (urlInstructorParams.length === 0 || urlInstructorParams.length >= 11) {
+      return;
+    }
+    const valid = urlInstructorParams.filter((name) => instructors.includes(name));
+    if (!sameStringArray(valid, selectedInstructors)) {
+      setSelectedInstructors(valid);
+    }
+  }, [
+    urlInstructorParams,
+    instructors,
+    rowLoad,
+    selectedInstructors,
+    setSelectedInstructors,
+  ]);
 
   useEffect(() => {
     if (rowLoad || selectedInstructors.length === 0) return;
@@ -72,6 +105,19 @@ export default function InstructorTimetable() {
       setSelectedInstructors(keep);
     }
   }, [rowLoad, instructors, selectedInstructors, setSelectedInstructors]);
+
+  useEffect(() => {
+    const next = new URLSearchParams(searchParams);
+    next.delete(INSTRUCTOR_PARAM);
+
+    if (selectedInstructors.length > 0 && selectedInstructors.length < 11) {
+      selectedInstructors.forEach((name) => next.append(INSTRUCTOR_PARAM, name));
+    }
+
+    if (next.toString() !== searchParams.toString()) {
+      setSearchParams(next, { replace: true });
+    }
+  }, [searchParams, selectedInstructors, setSearchParams]);
 
   /* 5️⃣  filter rows for chosen instructors --------------------------- */
   const filtered = useMemo<SheetRow[]>(() => {
@@ -137,7 +183,14 @@ export default function InstructorTimetable() {
 
         {/* toggle sessions vs exams */}
         {selectedInstructors.length > 0 && (
-          <Box mb={2} className="no-print">
+          <Box
+            mb={2}
+            className="no-print"
+            display="flex"
+            alignItems="center"
+            justifyContent="space-between"
+            gap={2}
+          >
             <ToggleButtonGroup
               value={showExams ? "exams" : "sessions"}
               exclusive
@@ -150,6 +203,18 @@ export default function InstructorTimetable() {
               <ToggleButton value="sessions">Course Sessions</ToggleButton>
               <ToggleButton value="exams">Final Exams</ToggleButton>
             </ToggleButtonGroup>
+            {!showExams && (
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={showEnrollment}
+                    onChange={(e) => setShowEnrollment(e.target.checked)}
+                    size="small"
+                  />
+                }
+                label="Show enrollment"
+              />
+            )}
           </Box>
         )}
 
@@ -166,6 +231,7 @@ export default function InstructorTimetable() {
               data={filtered}
               semester={semester ?? undefined}
               hideTooltip
+              showEnrollment={showEnrollment}
             />
           ) : (
             <Typography

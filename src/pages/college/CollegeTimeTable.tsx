@@ -1,7 +1,14 @@
 // src/pages/student/CollegeTimetable.tsx
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router";
-import { Box, Autocomplete, TextField, Typography } from "@mui/material";
+import {
+  Box,
+  Autocomplete,
+  TextField,
+  Typography,
+  FormControlLabel,
+  Switch,
+} from "@mui/material";
 
 import WeeklySchedule from "@/src/components/WeeklySchedule";
 import MyCustomSpinner from "@/src/components/MyCustomSpinner";
@@ -44,6 +51,8 @@ const baseName = (v: unknown) => {
 
 /* ————— component ————— */
 export default function CollegeTimetable() {
+  const [showEnrollment, setShowEnrollment] = useState(false);
+
   /* 1️⃣  semester */
   const { data: semInfo, isLoading: semLoad, error: semErr } = useSemesters();
   const storeSem = useFilterStore((s) => s.semester);
@@ -120,6 +129,20 @@ export default function CollegeTimetable() {
             sx={{ width: "100%" }}
           />
         </Box>
+        {collegeParam && (
+          <Box mb={2} className="no-print">
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={showEnrollment}
+                  onChange={(e) => setShowEnrollment(e.target.checked)}
+                  size="small"
+                />
+              }
+              label="Show enrollment"
+            />
+          </Box>
+        )}
 
         {/* weekly grid or prompts */}
         {collegeParam ? (
@@ -128,6 +151,7 @@ export default function CollegeTimetable() {
               data={filtered}
               semester={semester ?? undefined}
               hideTooltip
+              showEnrollment={showEnrollment}
             />
           ) : (
             <Typography

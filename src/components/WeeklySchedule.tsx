@@ -31,6 +31,7 @@ interface ScheduleEntry {
   section?: number | string;
   sectionType?: string;
   hall?: string;
+  studentsInSection?: string;
   instructor?: string;
   courseName?: string;
 }
@@ -40,6 +41,7 @@ interface WeeklyScheduleProps {
   semester?: string;
   hideInstructor?: boolean;
   hideTooltip?: boolean;
+  showEnrollment?: boolean;
   headerLeft?: ReactNode;
 }
 
@@ -73,6 +75,7 @@ export default function WeeklySchedule({
   semester,
   hideInstructor = false,
   hideTooltip = false,
+  showEnrollment = false,
   headerLeft,
 }: WeeklyScheduleProps) {
   const theme = useTheme();
@@ -132,6 +135,7 @@ export default function WeeklySchedule({
         section: String(row.section ?? ""),
         sectionType: String(row.section_type ?? ""), // if you store it
         hall: String(row.hall ?? ""),
+        studentsInSection: String(row.students_in_section ?? "").trim(),
         instructor: String(row.instructor ?? ""),
         courseName: String(row.course_name ?? ""),
       });
@@ -444,6 +448,18 @@ export default function WeeklySchedule({
                                 }}
                               >
                                 {e.hall}
+                              </Typography>
+                            )}
+                            {showEnrollment && e.studentsInSection !== "" && (
+                              <Typography
+                                variant="caption"
+                                component="div"
+                                sx={{
+                                  color: "text.secondary",
+                                  textAlign: "center",
+                                }}
+                              >
+                                Enrolled: {e.studentsInSection}
                               </Typography>
                             )}
                           </Stack>
