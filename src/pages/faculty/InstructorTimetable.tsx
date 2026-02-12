@@ -72,6 +72,7 @@ export default function InstructorTimetable() {
     (s) => s.setSelectedInstructors,
   );
   const selectedInstructorsRef = useRef(selectedInstructors);
+  const isApplyingUrlInstructors = useRef(false);
   const urlInstructorParams = useMemo(
     () =>
       searchParams
@@ -92,6 +93,7 @@ export default function InstructorTimetable() {
     }
     const valid = urlInstructorParams.filter((name) => instructors.includes(name));
     if (!sameStringArray(valid, selectedInstructorsRef.current)) {
+      isApplyingUrlInstructors.current = true;
       setSelectedInstructors(valid);
     }
   }, [
@@ -111,6 +113,12 @@ export default function InstructorTimetable() {
   }, [rowLoad, instructors, selectedInstructors, setSelectedInstructors]);
 
   useEffect(() => {
+    if (rowLoad) return;
+    if (isApplyingUrlInstructors.current) {
+      isApplyingUrlInstructors.current = false;
+      return;
+    }
+
     const next = new URLSearchParams(searchParams);
     next.delete(INSTRUCTOR_PARAM);
 
@@ -121,7 +129,7 @@ export default function InstructorTimetable() {
     if (next.toString() !== searchParams.toString()) {
       setSearchParams(next, { replace: true });
     }
-  }, [searchParams, selectedInstructors, setSearchParams]);
+  }, [rowLoad, searchParams, selectedInstructors, setSearchParams]);
 
   /* 5️⃣  filter rows for chosen instructors --------------------------- */
   const filtered = useMemo<SheetRow[]>(() => {
