@@ -1,5 +1,5 @@
 // src/pages/faculty/InstructorTimetable.tsx
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
 import {
   Box,
@@ -71,6 +71,7 @@ export default function InstructorTimetable() {
   const setSelectedInstructors = useSelectionTableStore(
     (s) => s.setSelectedInstructors,
   );
+  const selectedInstructorsRef = useRef(selectedInstructors);
   const urlInstructorParams = useMemo(
     () =>
       searchParams
@@ -81,19 +82,22 @@ export default function InstructorTimetable() {
   );
 
   useEffect(() => {
+    selectedInstructorsRef.current = selectedInstructors;
+  }, [selectedInstructors]);
+
+  useEffect(() => {
     if (rowLoad) return;
     if (urlInstructorParams.length === 0 || urlInstructorParams.length >= 11) {
       return;
     }
     const valid = urlInstructorParams.filter((name) => instructors.includes(name));
-    if (!sameStringArray(valid, selectedInstructors)) {
+    if (!sameStringArray(valid, selectedInstructorsRef.current)) {
       setSelectedInstructors(valid);
     }
   }, [
     urlInstructorParams,
     instructors,
     rowLoad,
-    selectedInstructors,
     setSelectedInstructors,
   ]);
 
