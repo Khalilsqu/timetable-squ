@@ -184,9 +184,21 @@ export default function StudentTimetableContent() {
 
   useEffect(() => {
     if (rowsLoading || chosen.length === 0) return;
-    const validSectionIds = new Set(sections.map((section) => section.id));
-    const keep = chosen.filter((section) => validSectionIds.has(section.id));
-    if (keep.length !== chosen.length) setChosen(keep);
+    const latestById = new Map(sections.map((section) => [section.id, section]));
+    let changed = false;
+    const synced: SectionOpt[] = [];
+
+    chosen.forEach((section) => {
+      const latest = latestById.get(section.id);
+      if (!latest) {
+        changed = true;
+        return;
+      }
+      synced.push(latest);
+      if (latest !== section) changed = true;
+    });
+
+    if (changed) setChosen(synced);
   }, [rowsLoading, sections, chosen, setChosen]);
 
   const onPickUniqueCourse = (sec: SectionOpt) => {

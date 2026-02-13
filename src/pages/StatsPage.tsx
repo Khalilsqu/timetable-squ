@@ -1,13 +1,23 @@
-import { useMemo } from "react";
+import { lazy, Suspense, useMemo } from "react";
 import { Box } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { useScheduleRows, useSemesters } from "@/src/lib/queries";
 import { useFilterStore } from "@/src/stores/filterStore";
-import StatsCollegeDepartmentChart from "./stats-charts/StatsCollegeDepartmentChart";
-import StatsCollegeSummaryChart from "./stats-charts/StatsCollegeSummaryChart";
-import StatsHallUtilizationHeatmap from "./stats-charts/StatsHallUtilizationHeatmap";
-import StatsInstructorTeachingHoursChart from "./stats-charts/StatsInstructorTeachingHoursChart";
+import MyCustomSpinner from "@/src/components/MyCustomSpinner";
 import { buildStatsBase, getStatsThemeTokens } from "./stats-charts/statsData";
+
+const StatsCollegeSummaryChart = lazy(
+  () => import("./stats-charts/StatsCollegeSummaryChart"),
+);
+const StatsCollegeDepartmentChart = lazy(
+  () => import("./stats-charts/StatsCollegeDepartmentChart"),
+);
+const StatsHallUtilizationHeatmap = lazy(
+  () => import("./stats-charts/StatsHallUtilizationHeatmap"),
+);
+const StatsInstructorTeachingHoursChart = lazy(
+  () => import("./stats-charts/StatsInstructorTeachingHoursChart"),
+);
 
 export default function StatsPage() {
   const muiTheme = useTheme();
@@ -30,32 +40,34 @@ export default function StatsPage() {
 
   return (
     <Box display="flex" flexDirection="column" gap={2}>
-      <StatsCollegeSummaryChart
-        base={base}
-        theme={theme}
-        isLoading={isLoading}
-        error={error}
-      />
-      <StatsCollegeDepartmentChart
-        base={base}
-        theme={theme}
-        isLoading={isLoading}
-        error={error}
-      />
-      <StatsHallUtilizationHeatmap
-        rows={heatmapRows}
-        theme={theme}
-        isLoading={heatmapLoading}
-        error={heatmapError}
-      />
-      <StatsInstructorTeachingHoursChart
-        rows={rows}
-        semesters={semInfo?.list ?? []}
-        activeSemester={heatmapSemester}
-        theme={theme}
-        isLoading={isLoading}
-        error={error}
-      />
+      <Suspense fallback={<MyCustomSpinner label="Loading charts..." />}>
+        <StatsCollegeSummaryChart
+          base={base}
+          theme={theme}
+          isLoading={isLoading}
+          error={error}
+        />
+        <StatsCollegeDepartmentChart
+          base={base}
+          theme={theme}
+          isLoading={isLoading}
+          error={error}
+        />
+        <StatsHallUtilizationHeatmap
+          rows={heatmapRows}
+          theme={theme}
+          isLoading={heatmapLoading}
+          error={heatmapError}
+        />
+        <StatsInstructorTeachingHoursChart
+          rows={rows}
+          semesters={semInfo?.list ?? []}
+          activeSemester={heatmapSemester}
+          theme={theme}
+          isLoading={isLoading}
+          error={error}
+        />
+      </Suspense>
     </Box>
   );
 }

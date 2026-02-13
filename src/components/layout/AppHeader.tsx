@@ -72,17 +72,6 @@ const NavAnchor = styled(NavLink)(({ theme }) => {
       backgroundColor: theme.palette.primary.main,
       fontWeight: 600,
     },
-    "&.active::after": {
-      content: '""',
-      position: "absolute",
-      left: 10,
-      right: 10,
-      bottom: 3,
-      height: 2,
-      borderRadius: 2,
-      backgroundColor: theme.palette.primary.contrastText,
-      opacity: 0.9,
-    },
     "&:focus-visible": {
       boxShadow: `0 0 0 3px ${alpha(
         isDark ? theme.palette.primary.light : theme.palette.primary.main,
@@ -115,17 +104,6 @@ const NavButton = styled(ButtonBase)(({ theme }) => {
       color: theme.palette.primary.contrastText,
       backgroundColor: theme.palette.primary.main,
       fontWeight: 600,
-    },
-    "&.active::after": {
-      content: '""',
-      position: "absolute",
-      left: 10,
-      right: 10,
-      bottom: 3,
-      height: 2,
-      borderRadius: 2,
-      backgroundColor: theme.palette.primary.contrastText,
-      opacity: 0.9,
     },
     "&:focus-visible": {
       boxShadow: `0 0 0 3px ${alpha(

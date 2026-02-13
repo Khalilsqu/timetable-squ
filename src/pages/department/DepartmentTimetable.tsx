@@ -106,6 +106,19 @@ export default function DepartmentTimetable() {
   const handleDeptChange = (_: unknown, v: DepartmentOpt | null) =>
     setParam(searchParams, "department", v?.department, setSearchParams);
 
+  useEffect(() => {
+    if (semLoad || rowLoad || !deptParam) return;
+    if (departmentOpts.some((d) => d.department === deptParam)) return;
+    setParam(searchParams, "department", undefined, setSearchParams);
+  }, [
+    semLoad,
+    rowLoad,
+    deptParam,
+    departmentOpts,
+    searchParams,
+    setSearchParams,
+  ]);
+
   /* 5️⃣  filtered rows ------------------------------------------------- */
   const filtered = useMemo<SheetRow[]>(() => {
     if (!selectedOpt) return [];

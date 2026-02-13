@@ -1,5 +1,5 @@
 // src/pages/student/CollegeTimetable.tsx
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router";
 import {
   Box,
@@ -85,6 +85,19 @@ export default function CollegeTimetable() {
 
   const onCollegeChange = (_: unknown, v: string | null) =>
     setParam(searchParams, "college", v ?? undefined, setSearchParams);
+
+  useEffect(() => {
+    if (semLoad || rowLoad || !collegeParam) return;
+    if (collegeOpts.includes(collegeParam)) return;
+    setParam(searchParams, "college", undefined, setSearchParams);
+  }, [
+    semLoad,
+    rowLoad,
+    collegeParam,
+    collegeOpts,
+    searchParams,
+    setSearchParams,
+  ]);
 
   /* 5️⃣  filtered rows */
   // filter rows for the selected college, keeping only direct courses
