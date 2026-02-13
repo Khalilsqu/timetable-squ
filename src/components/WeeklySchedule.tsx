@@ -356,60 +356,104 @@ export default function WeeklySchedule({
                                 flexWrap: "wrap",
                               }}
                             >
-                              <Tooltip
-                                title={
-                                  !hideTooltip && e.courseName
-                                    ? e.courseName
-                                    : ""
-                                }
-                                disableHoverListener={
-                                  hideTooltip || !e.courseName || !isDesktop
-                                }
-                                disableFocusListener={
-                                  hideTooltip || !e.courseName || !isDesktop
-                                }
-                                disableTouchListener={
-                                  hideTooltip || !e.courseName || !isDesktop
-                                }
-                                slotProps={{
-                                  popper: {
-                                    className: "no-print",
-                                  },
-                                  tooltip: {
-                                    sx: {
-                                      fontSize: isDesktop
-                                        ? "0.95rem"
-                                        : undefined,
-                                      padding: isDesktop
-                                        ? "6px 10px"
-                                        : undefined,
-                                    },
-                                  },
+                              <Box
+                                sx={{
+                                  position: "relative",
+                                  display: "inline-flex",
                                 }}
                               >
                                 <Chip
                                   size="small"
                                   color="primary"
                                   label={`${e.courseCode ?? ""}${
-                                    e.section ? ` (${e.section})` : ""
+                                    e.section !== undefined &&
+                                    e.section !== null &&
+                                    String(e.section).trim() !== ""
+                                      ? `/${String(e.section).trim()}`
+                                      : ""
                                   }`}
                                   sx={{ fontWeight: 600 }}
-                                  onClick={
-                                    !hideTooltip && !isDesktop && e.courseName
-                                      ? (ev) => {
+                                />
+                                {!hideTooltip && !!e.courseName && (
+                                  <Tooltip
+                                    title={isDesktop ? e.courseName : ""}
+                                    disableHoverListener={!isDesktop}
+                                    disableFocusListener={!isDesktop}
+                                    disableTouchListener
+                                    slotProps={{
+                                      popper: {
+                                        className: "no-print",
+                                      },
+                                      tooltip: {
+                                        sx: {
+                                          fontSize: isDesktop
+                                            ? "0.95rem"
+                                            : undefined,
+                                          padding: isDesktop
+                                            ? "6px 10px"
+                                            : undefined,
+                                        },
+                                      },
+                                    }}
+                                  >
+                                    <Box
+                                      component="sup"
+                                      role="button"
+                                      tabIndex={0}
+                                      aria-label="Show course name"
+                                      onClick={(ev) => {
+                                        setAnchorEl(ev.currentTarget);
+                                        setContent(e.courseName ?? "");
+                                      }}
+                                      onKeyDown={(ev) => {
+                                        if (ev.key === "Enter" || ev.key === " ") {
+                                          ev.preventDefault();
                                           setAnchorEl(ev.currentTarget);
                                           setContent(e.courseName ?? "");
                                         }
-                                      : undefined
-                                  }
-                                />
-                              </Tooltip>
+                                      }}
+                                      sx={{
+                                        position: "absolute",
+                                        top: -2,
+                                        right: -2,
+                                        minWidth: 12,
+                                        height: 12,
+                                        px: 0.25,
+                                        borderRadius: "999px",
+                                        border: "1px solid",
+                                        borderColor: "primary.dark",
+                                        backgroundColor: "primary.light",
+                                        fontSize: "0.56rem",
+                                        fontWeight: 700,
+                                        color: "primary.contrastText",
+                                        lineHeight: "12px",
+                                        textAlign: "center",
+                                        cursor: "pointer",
+                                        userSelect: "none",
+                                        "@media print": {
+                                          display: "none",
+                                        },
+                                      }}
+                                    >
+                                      i
+                                    </Box>
+                                  </Tooltip>
+                                )}
+                              </Box>
 
                               {!!e.sectionType && (
                                 <Chip
                                   size="small"
                                   variant="outlined"
                                   label={e.sectionType}
+                                  sx={{
+                                    height: 18,
+                                    "& .MuiChip-label": {
+                                      fontSize: "0.55rem",
+                                      px: 0.5,
+                                      py: 0,
+                                    },
+                                  }}
                                 />
                               )}
 
