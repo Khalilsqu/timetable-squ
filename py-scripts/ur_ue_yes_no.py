@@ -4,9 +4,9 @@ import pandas as pd
 
 
 BASE_DIR = Path(__file__).resolve().parent
-ALL_COURSES_PATH = BASE_DIR / "ExportToExcel (36).xlsx"
-UE_CSV_PATH = BASE_DIR / "ExportToExcel (37).csv"
-UR_CSV_PATH = BASE_DIR / "ExportToExcel (38).csv"
+ALL_COURSES_PATH = BASE_DIR / "17022026.xlsx"
+UE_CSV_PATH = BASE_DIR / "ue.csv"
+UR_CSV_PATH = BASE_DIR / "ur.csv"
 OUTPUT_PATH = BASE_DIR / "all_courses_with_ue_ur2.xlsx"
 COURSE_CODE_COL = "Course Code"
 
