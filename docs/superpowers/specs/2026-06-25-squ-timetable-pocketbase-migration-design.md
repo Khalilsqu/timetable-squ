@@ -7,12 +7,12 @@ Convert the existing Google Sheets-backed timetable SPA (`timetable-squ`) to a P
 ## Tech Stack
 
 - **Framework:** React 19 + TypeScript 5.9
-- **Build:** Vite 7 (SWC plugin)
-- **UI Library:** MUI v7 (latest)
+- **Build:** Vite 8 (SWC plugin)
+- **UI Library:** MUI 9
 - **Routing:** TanStack Router (type-safe routes, search params)
 - **Data Fetching:** TanStack Query (caching, stale-time, error handling)
 - **State Management:** Zustand (local UI state like filters, toggles)
-- **Backend:** PocketBase (direct browser SDK, no server proxy)
+- **Backend:** PocketBase 0.27 (direct browser SDK, no server proxy)
 - **Deployment:** Static files served via PocketBase's `pb_public/` directory
 - **Animation:** framer-motion (page transitions)
 - **Charts:** ECharts (same as current)
