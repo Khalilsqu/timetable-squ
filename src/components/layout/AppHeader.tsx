@@ -20,6 +20,7 @@ import {
   Paper,
   Popper,
   TextField,
+  Link,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import HomeIcon from "@mui/icons-material/Home";
@@ -44,6 +45,8 @@ const extraItems = [
   { label: "Common Slot", path: "/common-slot" },
   { label: "Statistics", path: "/stats" },
 ];
+
+const siteMigrationUrl = "https://tt.earthsciences.science/";
 
 // styled nav link
 const NavAnchor = styled(NavLink)(({ theme }) => {
@@ -360,6 +363,38 @@ const AppHeader = () => {
           zIndex: (t) => t.zIndex.appBar + 1,
         }}
       >
+        <Box
+          sx={{
+            px: { xs: 2, sm: 3 },
+            py: 1,
+            textAlign: "center",
+            fontSize: { xs: "0.8rem", sm: "0.875rem" },
+            lineHeight: 1.5,
+            color: (t) =>
+              t.palette.mode === "dark"
+                ? t.palette.warning.light
+                : t.palette.warning.dark,
+            backgroundColor: (t) =>
+              t.palette.mode === "dark"
+                ? alpha(t.palette.warning.main, 0.12)
+                : alpha(t.palette.warning.light, 0.28),
+            borderBottom: (t) =>
+              `1px solid ${alpha(t.palette.warning.main, 0.24)}`,
+          }}
+        >
+          This timetable service has moved to{" "}
+          <Link
+            href={siteMigrationUrl}
+            target="_blank"
+            rel="noreferrer"
+            underline="always"
+            color="inherit"
+            sx={{ fontWeight: 700 }}
+          >
+            tt.earthsciences.science
+          </Link>
+          . Please use the new site for the latest schedules and updates.
+        </Box>
         <Toolbar
           sx={{
             justifyContent: "space-between",
